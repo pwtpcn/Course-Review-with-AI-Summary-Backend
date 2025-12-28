@@ -6,14 +6,14 @@ export class User extends Metadata {
   @Column({unique: true})
   email!: string;
 
-  @Column()
+  @Column({unique: true})
   username!: string;
 
   @Column()
   hashedPassword!: string;
 
-  @Column({ nullable: true })
-  salt?: string;
+  @Column()
+  salt!: string;
 
   @Column({ default: "user" })
   role!: string;

@@ -6,45 +6,50 @@ import { hashPassword } from "../util/hash_password";
 import { UserLoginResponse } from "../dto/user_login_response";
 const service = new UserServices();
 
-export const userController = new Elysia({ prefix: "/user", detail: { tags: ["User"] } })
+export const userController = new Elysia({
+  prefix: "/user",
+  detail: { tags: ["User"] },
+})
   .post(
     "/register",
     async ({ body: { username, email, password } }) => {
       const user = new User();
       user.username = username;
       user.email = email;
-      
+
       const { hashedPassword, salt } = await hashPassword(password);
 
       user.hashedPassword = hashedPassword;
       user.salt = salt;
-      
-      return {user: await service.registerUser(user)};
+
+      return { user: await service.registerUser(user) };
     },
     {
       body: t.Object({
         username: t.String({
-            minLength: 3,
-            maxLength: 20,
+          minLength: 3,
+          maxLength: 20,
         }),
         email: t.String({
-            format: "email",
+          format: "email",
         }),
         password: t.String({
-            format: "regex",
-            regex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-            message: "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
-            minLength: 8,
-            maxLength: 15,
+          format: "regex",
+          regex:
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+          message:
+            "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+          minLength: 8,
+          maxLength: 15,
         }),
       }),
       detail: {
         description: "Register a new user",
         summary: "Register a new user",
-      }
-    },
+      },
+    }
   )
-  
+
   .post(
     "/login",
     async ({ body: { email, password } }) => {
@@ -54,12 +59,19 @@ export const userController = new Elysia({ prefix: "/user", detail: { tags: ["Us
       }
       const { hashedPassword, salt } = user;
       const passwordWithSalt = password + salt;
-      const isMatch = await Bun.password.verify(passwordWithSalt, hashedPassword);
+      const isMatch = await Bun.password.verify(
+        passwordWithSalt,
+        hashedPassword
+      );
       if (!isMatch) {
         return { error: "Invalid password" };
       }
-      const userLoginResponse = new UserLoginResponse(user.email, user.username, user.role);    
-      
+      const userLoginResponse = new UserLoginResponse(
+        user.email,
+        user.username,
+        user.role
+      );
+
       return { userLoginResponse };
     },
     {
@@ -67,13 +79,11 @@ export const userController = new Elysia({ prefix: "/user", detail: { tags: ["Us
         email: t.String({
           format: "email",
         }),
-        password: t.String({
-
-        }),
+        password: t.String({}),
       }),
       detail: {
         description: "Login a user",
         summary: "Login a user",
-      }
+      },
     }
-  )
+  );
