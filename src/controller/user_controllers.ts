@@ -6,7 +6,7 @@ import { hashPassword } from "../util/hash_password";
 import { UserLoginResponse } from "../dto/user_login_response";
 const service = new UserServices();
 
-export const userController = new Elysia({ prefix: "/user" })
+export const userController = new Elysia({ prefix: "/user", detail: { tags: ["User"] } })
   .post(
     "/register",
     async ({ body: { username, email, password } }) => {
@@ -38,7 +38,11 @@ export const userController = new Elysia({ prefix: "/user" })
             maxLength: 15,
         }),
       }),
-    }
+      detail: {
+        description: "Register a new user",
+        summary: "Register a new user",
+      }
+    },
   )
   
   .post(
@@ -67,5 +71,9 @@ export const userController = new Elysia({ prefix: "/user" })
 
         }),
       }),
+      detail: {
+        description: "Login a user",
+        summary: "Login a user",
+      }
     }
   )

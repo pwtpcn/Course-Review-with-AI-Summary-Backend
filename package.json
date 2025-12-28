@@ -5,7 +5,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bun run --watch src/index.ts"
   },
-    "dependencies": {
+  "dependencies": {
+    "@elysiajs/swagger": "^1.3.1",
     "@types/node": "^25.0.3",
     "elysia": "latest",
     "install": "^0.13.0",
