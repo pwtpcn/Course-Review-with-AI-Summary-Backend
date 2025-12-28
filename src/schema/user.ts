@@ -1,23 +1,20 @@
-import { Column, Entity } from "typeorm"
-import { Metadata } from "./metadata"
+import { Column, Entity } from "typeorm";
+import { Metadata } from "./common/metadata";
 
 @Entity()
 export class User extends Metadata {
-    @Column()
-    email!: string
+  @Column({unique: true})
+  email!: string;
 
-    @Column()
-    googleId!: string
+  @Column()
+  username!: string;
 
-    @Column()
-    username!: string
+  @Column()
+  hashedPassword!: string;
 
-    @Column()
-    hashedPassword!: string
+  @Column({ nullable: true })
+  salt?: string;
 
-    @Column()
-    salt!: string
-
-    @Column()
-    role!: string
+  @Column({ default: "user" })
+  role!: string;
 }
