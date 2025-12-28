@@ -4,9 +4,6 @@ import { Metadata } from "./common/metadata";
 @Entity()
 export class Review extends Metadata {
   @Column()
-  publicId!: string;
-
-  @Column()
   userId!: string;
 
   @Column()
@@ -21,8 +18,8 @@ export class Review extends Metadata {
   @Column()
   teachingStyle!: string;
 
-  @Column()
-  disadvantage!: string;
+  @Column({ nullable: true })
+  disadvantage?: string;
 
   @Column()
   rating1!: number;

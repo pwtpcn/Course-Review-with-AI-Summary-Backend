@@ -1,6 +1,7 @@
-import { Column, Entity, JoinTable, ManyToMany, PrimaryColumn } from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryColumn } from "typeorm";
 import { MetadataWithoutId } from "./common/metadata_without_id";
 import { CareerPath } from "./career_path";
+import { Review } from "./review";
 
 @Entity()
 export class Course extends MetadataWithoutId {
@@ -22,4 +23,7 @@ export class Course extends MetadataWithoutId {
   @JoinTable({ name: "course_career_paths" })
   @ManyToMany(() => CareerPath, (careerPath) => careerPath.courses)
   careerPaths!: CareerPath[];
+
+  @OneToMany(() => Review, (review) => review.courseId)
+  reviews!: Review[];
 }

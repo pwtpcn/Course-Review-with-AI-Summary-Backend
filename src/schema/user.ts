@@ -1,5 +1,6 @@
-import { Column, Entity } from "typeorm";
+import { Column, Entity, OneToMany } from "typeorm";
 import { Metadata } from "./common/metadata";
+import { Review } from "./review";
 
 @Entity()
 export class User extends Metadata {
@@ -17,4 +18,7 @@ export class User extends Metadata {
 
   @Column({ default: "user" })
   role!: string;
+
+  @OneToMany(() => Review, (review) => review.userId)
+  reviews!: Review[];
 }
