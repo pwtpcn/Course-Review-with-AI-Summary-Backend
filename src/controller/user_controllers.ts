@@ -161,4 +161,17 @@ export const userController = new Elysia({
       },
     }
   )
-    
+   
+  .delete(
+    "/delete/:id",
+    async ({ params: { id } }) => {
+      const response = await service.deleteUser(id);
+      return { user: response };
+    },
+    {
+      detail: {
+        description: "Delete a user",
+        summary: "Delete a user",
+      },
+    }
+  )

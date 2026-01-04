@@ -33,6 +33,10 @@ class UserServices {
     const { hashedPassword, salt } = await hashPassword(password);
     return this.dataSource.manager.update(User, id, { hashedPassword, salt });
   }
+
+  async deleteUser(id: string) {
+    return this.dataSource.manager.delete(User, id);
+  }
 }
 
 export default UserServices;
