@@ -14,6 +14,16 @@ export const userController = new Elysia({
   .post(
     "/register",
     async ({ body: { username, email, password } }) => {
+      const existsEmail = await service.getUserByEmail(email);
+      const existsUsername = await service.getUserByUsername(username);
+      
+      if(existsEmail) {
+        return { error: "Email already used" };
+      }
+      else if(existsUsername) {
+        return { error: "Username already used" };
+      }
+
       const user = new User();
       user.username = username;
       user.email = email;
@@ -92,7 +102,8 @@ export const userController = new Elysia({
   .get(
     "/getall",
     async () => {
-      return { users: await service.getAllUsers() };
+      const response = await service.getAllUsers();
+      return { users: response };
     },
     {
       detail: {
@@ -105,7 +116,8 @@ export const userController = new Elysia({
   .get(
     "/getbyid/:id",
     async ({ params: { id } }) => {
-      return { user: await service.getUserById(id) };
+      const response = await service.getUserById(id);
+      return { user: response };
     },
     {
       detail: {

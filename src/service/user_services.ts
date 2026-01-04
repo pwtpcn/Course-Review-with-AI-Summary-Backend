@@ -25,6 +25,10 @@ class UserServices {
     return this.dataSource.manager.find(User);
   }
 
+  async getUserByUsername(username: string) {
+    return this.dataSource.manager.findOne(User, { where: { username } });
+  }
+
   async changeUsername(id: string, username: string) {
     return this.dataSource.manager.update(User, id, { username });
   }
