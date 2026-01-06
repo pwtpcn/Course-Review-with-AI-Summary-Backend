@@ -58,7 +58,7 @@ export class TeacherServices {
 
     await this.dataSource.manager.update(Teacher, id, updatedTeacher);
 
-    return updatedTeacher;
+    return await this.getTeacherByIdOrThrow(id);
   }
 
   async deleteTeacher(id: string) {

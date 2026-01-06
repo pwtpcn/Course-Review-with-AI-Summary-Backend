@@ -14,7 +14,10 @@ export class CourseServices {
       throw new Error("Course ID is required");
     }
 
-    await this.getCourseByIdOrThrow(courseData.courseId);
+    const existsCourse = await this.getCourseById(courseData.courseId!);
+    if (existsCourse) {
+      throw new Error("Course already exists");
+    }
 
     const course = new Course();
     course.courseId = courseData.courseId;
@@ -66,7 +69,7 @@ export class CourseServices {
     updatedCourse.updatedAt = new Date();
 
     await this.dataSource.manager.update(Course, id, updatedCourse);
-    return updatedCourse;
+    return await this.getCourseByIdOrThrow(id);
   }
 
   async deleteCourse(id: string) {
