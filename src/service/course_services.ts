@@ -14,13 +14,10 @@ export class CourseServices {
       throw new Error("Course ID is required");
     }
 
-    const existsCourse = await this.getCourseById(courseData.courseId!);
-    if (existsCourse) {
-      throw new Error("Course already exists");
-    }
+    await this.getCourseByIdOrThrow(courseData.courseId);
 
     const course = new Course();
-    course.courseId = courseData.courseId!;
+    course.courseId = courseData.courseId;
     course.nameTh = courseData.nameTh!;
     course.nameEn = courseData.nameEn!;
     course.description = courseData.description!;

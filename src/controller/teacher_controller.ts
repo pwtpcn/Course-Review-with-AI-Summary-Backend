@@ -1,7 +1,6 @@
 import Elysia from "elysia";
 import TeacherServices from "../service/teacher_services";
 import { t } from "elysia";
-import { Teacher } from "../schema/teacher";
 
 const service = new TeacherServices();
 
@@ -13,12 +12,12 @@ export const teacherController = new Elysia({
   .post(
     "/create",
     async ({ body }) => {
-      const teacher = new Teacher();
-      teacher.name = body.name;
-      teacher.email = body.email;
-
-      const response = await service.createTeacher(teacher);
-      return { teacher: response };
+      try {
+        const response = await service.createTeacher(body);
+        return { message: "Teacher created successfully", teacher: response };
+      } catch (e: any) {
+        return { error: e.message };
+      }
     },
     {
       body: t.Object({
@@ -35,8 +34,12 @@ export const teacherController = new Elysia({
   .get(
     "/getall",
     async () => {
-      const response = await service.getAllTeachers();
-      return { teachers: response };
+      try {
+        const response = await service.getAllTeachers();
+        return { message: "Teachers fetched successfully", teachers: response };
+      } catch (e: any) {
+        return { error: e.message };
+      }
     },
     {
       detail: {
@@ -49,10 +52,12 @@ export const teacherController = new Elysia({
   .get(
     "/getbyid/:id",
     async ({ params }) => {
-      const response = await service.getTeacherById(params.id);
-      if (!response) return { error: "Teacher not found" };
-
-      return { teacher: response };
+      try {
+        const response = await service.getTeacherByIdOrThrow(params.id);
+        return { message: "Teacher fetched successfully", teacher: response };
+      } catch (e: any) {
+        return { error: e.message };
+      }
     },
     {
       params: t.Object({
@@ -68,16 +73,12 @@ export const teacherController = new Elysia({
   .put(
     "/update/:id",
     async ({ params: { id }, body }) => {
-      const teacher = await service.getTeacherById(id);
-      if (!teacher) return { error: "Teacher not found" };
-
-      teacher.name = body.name ?? teacher.name;
-      teacher.email = body.email ?? teacher.email;
-      teacher.updatedAt = new Date();
-
-      const response = await service.updateTeacher(id, teacher);
-
-      return { teacher: response };
+      try {
+        const response = await service.updateTeacher(id, body);
+        return { message: "Teacher updated successfully", teacher: response };
+      } catch (e: any) {
+        return { error: e.message };
+      }
     },
     {
       params: t.Object({
@@ -96,11 +97,16 @@ export const teacherController = new Elysia({
 
   .delete(
     "/delete/:id",
-    async ({ params }) => {
-      const response = await service.deleteTeacher(params.id);
-      if (!response) return { error: "Teacher not found" };
-
-      return { teacher: response };
+    async ({ params: { id } }) => {
+      try {
+        const deletedTeacher = await service.deleteTeacher(id);
+        return {
+          message: "Teacher deleted successfully",
+          teacher: deletedTeacher,
+        };
+      } catch (e: any) {
+        return { error: e.message };
+      }
     },
     {
       params: t.Object({
