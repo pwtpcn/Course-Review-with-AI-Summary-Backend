@@ -30,12 +30,11 @@ class UserServices {
   }
 
   async changeUsername(id: string, username: string) {
-    return this.dataSource.manager.update(User, id, { username });
+    return this.dataSource.manager.update(User, id, { username, updatedAt: new Date() });
   }
 
-  async changePassword(id: string, password: string) {
-    const { hashedPassword, salt } = await hashPassword(password);
-    return this.dataSource.manager.update(User, id, { hashedPassword, salt });
+  async changePassword(id: string, newpassword: string, newsalt: string) {
+    return this.dataSource.manager.update(User, id, { hashedPassword: newpassword, salt: newsalt, updatedAt: new Date() });
   }
 
   async deleteUser(id: string) {

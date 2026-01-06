@@ -4,23 +4,30 @@ import { t } from "elysia";
 import { User } from "../schema/user";
 import { hashPassword } from "../util/hash_password";
 import { UserLoginResponse } from "../dto/user_login_response";
+import { jwt } from "@elysiajs/jwt";
+
 const service = new UserServices();
 
 export const userController = new Elysia({
   prefix: "/user",
   detail: { tags: ["User"] },
 })
+  .use(
+    jwt({
+      name: "jwt",
+      secret: "Fischl-Von-Luftschloss-Narfidort",
+    })
+  )
 
   .post(
     "/register",
     async ({ body: { username, email, password } }) => {
       const existsEmail = await service.getUserByEmail(email);
       const existsUsername = await service.getUserByUsername(username);
-      
-      if(existsEmail) {
+
+      if (existsEmail) {
         return { error: "Email already used" };
-      }
-      else if(existsUsername) {
+      } else if (existsUsername) {
         return { error: "Username already used" };
       }
 
@@ -63,7 +70,7 @@ export const userController = new Elysia({
 
   .post(
     "/login",
-    async ({ body: { email, password } }) => {
+    async ({ body: { email, password }, jwt, cookie: { auth } }) => {
       const user = await service.getUserByEmail(email);
       if (!user) {
         return { error: "User not found" };
@@ -77,10 +84,25 @@ export const userController = new Elysia({
       if (!isMatch) {
         return { error: "Invalid password" };
       }
+
+      const accessToken = await jwt.sign({
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+      });
+
+      auth.set({
+        value: accessToken,
+        httpOnly: true,
+        maxAge: 7 * 86400,
+        path: "/",
+      });
+
       const userLoginResponse = new UserLoginResponse(
         user.email,
         user.username,
-        user.role
+        user.role,
+        accessToken
       );
 
       return { userLoginResponse };
@@ -90,7 +112,7 @@ export const userController = new Elysia({
         email: t.String({
           format: "email",
         }),
-        password: t.String({}),
+        password: t.String(),
       }),
       detail: {
         description: "Login a user",
@@ -116,6 +138,11 @@ export const userController = new Elysia({
   .get(
     "/getbyid/:id",
     async ({ params: { id } }) => {
+      const user = await service.getUserById(id);
+      if (!user) {
+        return { error: "User not found" };
+      }
+      
       const response = await service.getUserById(id);
       return { user: response };
     },
@@ -127,15 +154,23 @@ export const userController = new Elysia({
     }
   )
 
-  .post(
-    "/changeUsername",
-    async ({ body: { id, username } }) => {
-      const response = await service.changeUsername(id, username);
-      return { user: response };
+  .put(
+    "/changeUsername/:id",
+    async ({ params: { id }, body: { username } }) => {
+      const user = await service.getUserById(id);
+      if (!user) {
+        return { error: "User not found" };
+      }
+
+      user.username = username;
+
+      await service.changeUsername(id, username);
+
+      const response = { message: "Username changed successfully", newUsername: username }; 
+      return response; 
     },
     {
       body: t.Object({
-        id: t.String(),
         username: t.String({
           minLength: 3,
           maxLength: 20,
@@ -148,15 +183,51 @@ export const userController = new Elysia({
     }
   )
 
-  .post(
-    "/changePassword",
-    async ({ body: { id, password } }) => {
-      const response = await service.changePassword(id, password);
-      return { user: response };
+  .put(
+    "/changePassword/:id",
+    async ({
+      params: { id },
+      body: { password, oldPassword },
+      jwt,
+      headers: { authorization },
+      cookie: { auth },
+    }) => {
+      // 1. Verify Token
+      const profile = await jwt.verify(authorization ?? (auth.value as string));
+      if (!profile) return { error: "Unauthorized" };
+
+      // 2. Authorization (ID Check)
+      if (profile.sub !== id) return { error: "Forbidden" };
+
+      const user = await service.getUserById(id);
+      if (!user) {
+        return { error: "User not found" };
+      }
+
+      // 3. Verify Old Password
+      const { hashedPassword: storedHash, salt } = user;
+      const passwordWithSalt = oldPassword + salt;
+      const isMatch = await Bun.password.verify(passwordWithSalt, storedHash);
+      if (!isMatch) {
+        return { error: "Invalid old password" };
+      }
+
+      const { hashedPassword, salt: newSalt } = await hashPassword(password);
+      user.hashedPassword = hashedPassword;
+      user.salt = newSalt;
+
+      await service.changePassword(
+        id,
+        hashedPassword,
+        newSalt
+      );
+
+      const response = { message: "Password changed successfully", username: user.username };
+      return response;
     },
     {
       body: t.Object({
-        id: t.String(),
+        oldPassword: t.String(),
         password: t.String({
           format: "regex",
           regex:
@@ -173,12 +244,19 @@ export const userController = new Elysia({
       },
     }
   )
-   
+
   .delete(
     "/delete/:id",
     async ({ params: { id } }) => {
-      const response = await service.deleteUser(id);
-      return { user: response };
+      const user = await service.getUserById(id);
+      if (!user) {
+        return { error: "User not found" };
+      }
+
+      await service.deleteUser(id);
+
+      const response = { message: "User deleted successfully", user };
+      return response;
     },
     {
       detail: {
@@ -186,4 +264,4 @@ export const userController = new Elysia({
         summary: "Delete a user",
       },
     }
-  )
+  );
