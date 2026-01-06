@@ -9,8 +9,39 @@ class UserServices {
     this.dataSource = dataSource;
   }
 
-  async registerUser(user: User) {
+  async registerUser(userData: Partial<User> & { password?: string }) {
+    const existsEmail = await this.getUserByEmail(userData.email!);
+    const existsUsername = await this.getUserByUsername(userData.username!);
+
+    if (existsEmail) {
+      throw new Error("Email already used");
+    }
+    if (existsUsername) {
+      throw new Error("Username already used");
+    }
+
+    const { hashedPassword, salt } = await hashPassword(userData.password!);
+
+    const user = new User();
+    user.email = userData.email!;
+    user.username = userData.username!;
+    user.hashedPassword = hashedPassword;
+    user.salt = salt;
+    // user.role is effectively default or optional in partial
+
     return this.dataSource.manager.save(user);
+  }
+
+  async verifyCredentials(email: string, password: string) {
+    const user = await this.getUserByEmail(email);
+    if (!user) return null;
+
+    const { hashedPassword, salt } = user;
+    const passwordWithSalt = password + salt;
+    const isMatch = await Bun.password.verify(passwordWithSalt, hashedPassword);
+
+    if (!isMatch) return null;
+    return user;
   }
 
   async getUserByEmail(email: string) {
@@ -19,6 +50,14 @@ class UserServices {
 
   async getUserById(id: string) {
     return this.dataSource.manager.findOne(User, { where: { id } });
+  }
+
+  async getUserByIdOrThrow(id: string) {
+    const user = await this.getUserById(id);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    return user;
   }
 
   async getAllUsers() {
@@ -30,11 +69,31 @@ class UserServices {
   }
 
   async changeUsername(id: string, username: string) {
-    return this.dataSource.manager.update(User, id, { username, updatedAt: new Date() });
+    await this.getUserByIdOrThrow(id);
+    return this.dataSource.manager.update(User, id, {
+      username,
+      updatedAt: new Date(),
+    });
   }
 
-  async changePassword(id: string, newpassword: string, newsalt: string) {
-    return this.dataSource.manager.update(User, id, { hashedPassword: newpassword, salt: newsalt, updatedAt: new Date() });
+  async changePassword(id: string, oldPassword: string, newPassword: string) {
+    const user = await this.getUserByIdOrThrow(id);
+
+    const { hashedPassword: storedHash, salt } = user;
+    const passwordWithSalt = oldPassword + salt;
+    const isMatch = await Bun.password.verify(passwordWithSalt, storedHash);
+
+    if (!isMatch) {
+      throw new Error("Invalid old password");
+    }
+
+    const { hashedPassword, salt: newSalt } = await hashPassword(newPassword);
+
+    return this.dataSource.manager.update(User, id, {
+      hashedPassword,
+      salt: newSalt,
+      updatedAt: new Date(),
+    });
   }
 
   async deleteUser(id: string) {
