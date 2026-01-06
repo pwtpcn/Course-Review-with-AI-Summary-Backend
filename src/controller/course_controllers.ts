@@ -34,6 +34,7 @@ export const courseController = new Elysia({
                 nameEn: t.String(),
                 description: t.String(),
                 credits: t.Number(),
+                teacherId: t.String(),
             }),
             detail: {
                 description: "Create a new course",
@@ -60,6 +61,10 @@ export const courseController = new Elysia({
         "/getbyid/:id",
         async ({ params: { id } }) => {
             const response = await service.getCourseById(id);
+            if(!response) {
+                return { error: "Course not found" };
+            }
+
             return { course: response };
         },
         {
@@ -73,14 +78,19 @@ export const courseController = new Elysia({
     .post(
         "/update/:id",
         async ({ params: { id }, body }) => {
-            const course = new Course();
-            course.courseId = body.courseId ?? id;
-            course.nameTh = body.nameTh ?? course.nameTh;
-            course.nameEn = body.nameEn ?? course.nameEn;
-            course.description = body.description ?? course.description;
-            course.credits = body.credits ?? course.credits;
+            const course = await service.getCourseById(id);
+            if (!course) {
+                return { error: "Course not found" };
+            }
 
-            const response = await service.updateCourse(id, course);
+            const newCourse = new Course();
+            newCourse.courseId = body.courseId ?? id;
+            newCourse.nameTh = body.nameTh ?? course.nameTh;
+            newCourse.nameEn = body.nameEn ?? course.nameEn;
+            newCourse.description = body.description ?? course.description;
+            newCourse.credits = body.credits ?? course.credits;
+
+            const response = await service.updateCourse(id, newCourse);
             return { course: response };
         },
         {
@@ -93,6 +103,7 @@ export const courseController = new Elysia({
                 nameEn: t.Optional(t.String()),
                 description: t.Optional(t.String()),
                 credits: t.Optional(t.Number()),
+                teacherId: t.Optional(t.String()),
             }),
             detail: {
                 description: "Update a course",

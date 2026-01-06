@@ -2,6 +2,7 @@ import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryColumn } from 
 import { MetadataWithoutId } from "./common/metadata_without_id";
 import { CareerPath } from "./career_path";
 import { Review } from "./review";
+import { Teacher } from "./teacher";
 
 @Entity()
 export class Course extends MetadataWithoutId {
@@ -26,4 +27,8 @@ export class Course extends MetadataWithoutId {
 
   @OneToMany(() => Review, (review) => review.courseId)
   reviews!: Review[];
+
+  @JoinTable({ name: "teacher_courses" })
+  @ManyToMany(() => Teacher, (teacher) => teacher.courses)
+  teachers!: Teacher[];
 }
