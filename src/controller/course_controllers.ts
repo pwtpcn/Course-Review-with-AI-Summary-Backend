@@ -75,7 +75,7 @@ export const courseController = new Elysia({
         }
     )
 
-    .post(
+    .put(
         "/update/:id",
         async ({ params: { id }, body }) => {
             const course = await service.getCourseById(id);
@@ -83,14 +83,14 @@ export const courseController = new Elysia({
                 return { error: "Course not found" };
             }
 
-            const newCourse = new Course();
-            newCourse.courseId = body.courseId ?? id;
-            newCourse.nameTh = body.nameTh ?? course.nameTh;
-            newCourse.nameEn = body.nameEn ?? course.nameEn;
-            newCourse.description = body.description ?? course.description;
-            newCourse.credits = body.credits ?? course.credits;
+            course.courseId = body.courseId ?? id;
+            course.nameTh = body.nameTh ?? course.nameTh;
+            course.nameEn = body.nameEn ?? course.nameEn;
+            course.description = body.description ?? course.description;
+            course.credits = body.credits ?? course.credits;
+            course.updatedAt = new Date();
 
-            const response = await service.updateCourse(id, newCourse);
+            const response = await service.updateCourse(id, course);
             return { course: response };
         },
         {
