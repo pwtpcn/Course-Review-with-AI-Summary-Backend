@@ -21,6 +21,9 @@ export class Course extends MetadataWithoutId {
   @Column()
   credits!: number;
 
+  @Column()
+  year!: number;
+
   @JoinTable({ name: "course_career_paths" })
   @ManyToMany(() => CareerPath, (careerPath) => careerPath.courses)
   careerPaths!: CareerPath[];
