@@ -135,10 +135,11 @@ export const userController = new Elysia({
     "/changeUsername/:id",
     async ({ params: { id }, body: { username } }) => {
       try {
-        await service.changeUsername(id, username);
+        const { oldUsername, newUsername } = await service.changeUsername(id, username);
         return {
           message: "Username changed successfully",
-          newUsername: username,
+          oldUsername,
+          newUsername,
         };
       } catch (e: any) {
         return { error: e.message };
@@ -210,8 +211,7 @@ export const userController = new Elysia({
     "/delete/:id",
     async ({ params: { id } }) => {
       try {
-        const user = await service.getUserByIdOrThrow(id);
-        await service.deleteUser(id);
+        const user = await service.deleteUser(id);
         return { message: "User deleted successfully", user };
       } catch (e: any) {
         return { error: e.message };

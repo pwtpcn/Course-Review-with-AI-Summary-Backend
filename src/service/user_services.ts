@@ -68,12 +68,14 @@ class UserServices {
     return this.dataSource.manager.findOne(User, { where: { username } });
   }
 
-  async changeUsername(id: string, username: string) {
-    await this.getUserByIdOrThrow(id);
-    return this.dataSource.manager.update(User, id, {
-      username,
+  async changeUsername(id: string, newUsername: string) {
+    const user = await this.getUserByIdOrThrow(id);
+    await this.dataSource.manager.update(User, id, {
+      username: newUsername,
       updatedAt: new Date(),
     });
+
+    return {oldUsername: user.username, newUsername};
   }
 
   async changePassword(id: string, oldPassword: string, newPassword: string) {
@@ -97,7 +99,9 @@ class UserServices {
   }
 
   async deleteUser(id: string) {
-    return this.dataSource.manager.delete(User, id);
+    const user = await this.getUserByIdOrThrow(id);
+    await this.dataSource.manager.delete(User, id);
+    return user;
   }
 }
 
