@@ -18,6 +18,9 @@ export class Review extends Metadata {
   @Column()
   teachingStyle!: string;
 
+  @Column()
+  grade?: string;
+
   @Column({ nullable: true })
   disadvantage?: string;
 
