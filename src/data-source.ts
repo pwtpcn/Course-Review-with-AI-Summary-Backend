@@ -2,7 +2,7 @@ import { DataSource } from "typeorm";
 import { User } from "./schema/user";
 import { Course } from "./schema/course";
 import { Review } from "./schema/review";
-import { CareerPath } from "./schema/career_path";
+import { Job } from "./schema/job";
 import { Teacher } from "./schema/teacher";
 
 export const dataSource = new DataSource({
@@ -12,7 +12,7 @@ export const dataSource = new DataSource({
   username: "user",
   password: "password",
   database: "db",
-  entities: [User, Course, Review, CareerPath, Teacher],
+  entities: [User, Course, Review, Job, Teacher],
   migrations: [],
   synchronize: true,
 });
