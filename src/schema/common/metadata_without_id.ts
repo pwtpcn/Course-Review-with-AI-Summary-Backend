@@ -1,9 +1,9 @@
 import { CreateDateColumn, UpdateDateColumn } from "typeorm";
 
 export abstract class MetadataWithoutId {
-    @CreateDateColumn()
-    createdAt!: Date
+  @CreateDateColumn({ type: "timestamptz" })
+  createdAt!: Date;
 
-    @UpdateDateColumn()
-    updatedAt!: Date
+  @UpdateDateColumn({ type: "timestamptz" })
+  updatedAt!: Date;
 }
