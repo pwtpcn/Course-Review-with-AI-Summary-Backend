@@ -9,16 +9,25 @@ export class ReviewServices {
         this.dataSource = dataSource;
     }
 
-    async createReview(review: Review) {
-        return this.dataSource.getRepository(Review).save(review);
+    async createReview(reviewData: Partial<Review>) {
+        const review = new Review()
+        review.userId = reviewData.userId!;
+        review.courseId = reviewData.courseId!;
+        review.content = reviewData.content!;
+        review.pros = reviewData.pros!;
+        review.cons = reviewData.cons;
+        review.rating = reviewData.rating!;
+        review.job = reviewData.job;
+
+        return this.dataSource.manager.save(Review, review);
     }
 
     async getAllReviews() {
-        return this.dataSource.getRepository(Review).find();
+        return this.dataSource.manager.find(Review);
     }
 
     async getReviewById(id: string) {
-        return this.dataSource.getRepository(Review).findOneBy({ id });
+        return this.dataSource.manager.findOne(Review, { where: { id } });
     }
 
     async getReviewByIdOrThrow(id: string) {
@@ -30,32 +39,39 @@ export class ReviewServices {
     }
 
     async getReviewByUserId(userId: string) {
-        return this.dataSource.getRepository(Review).find({ where: { userId } });
+        return this.dataSource.manager.find(Review, { where: { userId } });
     }
 
     async getReviewByCourseId(courseId: string) {
-        return this.dataSource.getRepository(Review).find({ where: { courseId } });
+        return this.dataSource.manager.find(Review, { where: { courseId } });
     }
 
-    // async updateReview(id: string, reviewData: Partial<Review>) {
-    //     const review = await this.getReviewByIdOrThrow(id);
+    async getReviewFromNewest() {
+        return this.dataSource.manager.find(Review, { order: { createdAt: "DESC" } });
+    }
 
-    //     const updatedReview = new Review();
-    //     updatedReview.id = review.id;
-    //     updatedReview.userId = reviewData.userId ?? review.userId;
-    //     updatedReview.courseId = reviewData.courseId ?? review.courseId;
-    //     updatedReview.rating = reviewData.rating ?? review.rating;
-    //     updatedReview.comment = reviewData.comment ?? review.comment;
-    //     updatedReview.createdAt = review.createdAt;
-    //     updatedReview.updatedAt = new Date();
+    async getReviewFromOldest() {
+        return this.dataSource.manager.find(Review, { order: { createdAt: "ASC" } });
+    }
 
-    //     await this.dataSource.getRepository(Review).update(id, updatedReview);
-    //     return updatedReview;
-    // }
+    async updateReview(id: string, reviewData: Partial<Review>) {
+        const review = await this.getReviewByIdOrThrow(id);
+
+        const updatedReview = new Review();
+        updatedReview.rating = reviewData.rating ?? review.rating;
+        updatedReview.content = reviewData.content ?? review.content;
+        updatedReview.pros = reviewData.pros ?? review.pros;
+        updatedReview.cons = reviewData.cons ?? review.cons;
+        updatedReview.job = reviewData.job ?? review.job;
+        updatedReview.updatedAt = new Date();
+
+        await this.dataSource.manager.update(Review, id, updatedReview);
+        return updatedReview;
+    }
 
     async deleteReview(id: string) {
         const deletedReview = await this.getReviewByIdOrThrow(id);
-        await this.dataSource.getRepository(Review).delete(deletedReview);
+        await this.dataSource.manager.delete(Review, id);
         
         return deletedReview;
     }

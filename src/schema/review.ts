@@ -10,26 +10,17 @@ export class Review extends Metadata {
   courseId!: string;
 
   @Column()
-  contentDetail!: string;
+  content!: string;
 
   @Column()
-  difficulty!: string;
+  pros!: string;
+
+  @Column({nullable: true})
+  cons?: string;
 
   @Column()
-  teachingStyle!: string;
+  rating!: number;
 
-  @Column()
-  grade?: string;
-
-  @Column({ nullable: true })
-  disadvantage?: string;
-
-  @Column()
-  rating1!: number;
-
-  @Column()
-  rating2!: number;
-
-  @Column()
-  rating3!: number;
+  @Column({nullable: true})
+  job?: string;
 }
