@@ -55,8 +55,8 @@ export const userController = new Elysia({
 
   .post(
     "/login",
-    async ({ body: { email, password }, jwt, cookie: { auth } }) => {
-      const user = await service.verifyCredentials(email, password);
+    async ({ body: { identifier, password }, jwt, cookie: { auth } }) => {
+      const user = await service.verifyCredentials(identifier, password);
 
       if (!user) {
         return { error: "Invalid email or password" }; // Unified error message for security
@@ -86,14 +86,12 @@ export const userController = new Elysia({
     },
     {
       body: t.Object({
-        email: t.String({
-          format: "email",
-        }),
+        identifier: t.String(),
         password: t.String(),
       }),
       detail: {
-        description: "Login a user",
-        summary: "Login a user",
+        description: "Login a user (username or email)",
+        summary: "Login a user (username or email)",
       },
     }
   )
@@ -134,7 +132,10 @@ export const userController = new Elysia({
     "/changeUsername/:id",
     async ({ params: { id }, body: { username } }) => {
       try {
-        const { oldUsername, newUsername } = await service.changeUsername(id, username);
+        const { oldUsername, newUsername } = await service.changeUsername(
+          id,
+          username
+        );
         return {
           message: "Username changed successfully",
           oldUsername,

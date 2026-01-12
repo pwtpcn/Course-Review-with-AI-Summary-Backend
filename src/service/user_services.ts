@@ -32,8 +32,10 @@ class UserServices {
     return this.dataSource.manager.save(user);
   }
 
-  async verifyCredentials(email: string, password: string) {
-    const user = await this.getUserByEmail(email);
+  async verifyCredentials(identifier: string, password: string) {
+    const user = await this.dataSource.manager.findOne(User, {
+      where: [{ email: identifier }, { username: identifier }],
+    });
     if (!user) return null;
 
     const { hashedPassword, salt } = user;
@@ -75,7 +77,7 @@ class UserServices {
       updatedAt: new Date(),
     });
 
-    return {oldUsername: user.username, newUsername};
+    return { oldUsername: user.username, newUsername };
   }
 
   async changePassword(id: string, oldPassword: string, newPassword: string) {
