@@ -1,7 +1,6 @@
 import Elysia from "elysia";
 import UserServices from "../service/user_services";
 import { t } from "elysia";
-import { User } from "../schema/user";
 import { UserLoginResponse } from "../dto/user_login_response";
 import { jwt } from "@elysiajs/jwt";
 
@@ -14,7 +13,7 @@ export const userController = new Elysia({
   .use(
     jwt({
       name: "jwt",
-      secret: "Fischl-Von-Luftschloss-Narfidort",
+      secret: process.env.JWT_SECRET as string,
     })
   )
 
@@ -23,7 +22,7 @@ export const userController = new Elysia({
     async ({ body: { username, email, password } }) => {
       try {
         const user = await service.registerUser({ username, email, password });
-        return { user };
+        return { message: "User register successfully", user: user };
       } catch (e: any) {
         return { error: e.message };
       }
@@ -83,7 +82,7 @@ export const userController = new Elysia({
         accessToken
       );
 
-      return { userLoginResponse };
+      return { message: "Login successfully", user: userLoginResponse };
     },
     {
       body: t.Object({
@@ -103,7 +102,7 @@ export const userController = new Elysia({
     "/getall",
     async () => {
       const response = await service.getAllUsers();
-      return { users: response };
+      return { message: "Users fetched successfully", users: response };
     },
     {
       detail: {
@@ -118,7 +117,7 @@ export const userController = new Elysia({
     async ({ params: { id } }) => {
       try {
         const response = await service.getUserByIdOrThrow(id);
-        return { user: response };
+        return { message: "User fetch successfully", user: response };
       } catch (e: any) {
         return { error: e.message };
       }
