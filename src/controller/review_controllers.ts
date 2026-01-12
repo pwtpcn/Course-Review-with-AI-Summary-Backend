@@ -125,8 +125,6 @@ export const reviewController = new Elysia({
         id: t.String(),
       }),
       body: t.Object({
-        userId: t.String(),
-        courseId: t.String(),
         content: t.String(),
         pros: t.String(),
         cons: t.Optional(t.String()),
