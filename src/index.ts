@@ -3,6 +3,7 @@ import { dataSource } from "./data-source";
 import { userController } from "./controller/user_controllers";
 import { courseController } from "./controller/course_controllers";
 import { teacherController } from "./controller/teacher_controller";
+import { reviewController } from "./controller/review_controllers";
 import { swagger } from "@elysiajs/swagger";
 
 await dataSource.initialize();
@@ -12,6 +13,7 @@ const app = new Elysia()
   .use(userController)
   .use(courseController)
   .use(teacherController)
+  .use(reviewController)
   .listen(3000);
 
 console.log(

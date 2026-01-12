@@ -15,12 +15,18 @@ export class Review extends Metadata {
   @Column()
   pros!: string;
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   cons?: string;
 
   @Column()
   rating!: number;
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   job?: string;
+
+  @Column({ default: 0 })
+  like!: number;
+
+  @Column({ default: 0 })
+  dislike!: number;
 }
