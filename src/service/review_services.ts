@@ -56,16 +56,8 @@ export class ReviewServices {
   async updateReview(id: string, reviewData: Partial<Review>) {
     const review = await this.getReviewByIdOrThrow(id);
 
-    const updatedReview = new Review();
-    updatedReview.rating = reviewData.rating ?? review.rating;
-    updatedReview.content = reviewData.content ?? review.content;
-    updatedReview.pros = reviewData.pros ?? review.pros;
-    updatedReview.cons = reviewData.cons ?? review.cons;
-    updatedReview.job = reviewData.job ?? review.job;
-    updatedReview.updatedAt = new Date();
-
-    await this.dataSource.manager.update(Review, id, updatedReview);
-    return updatedReview;
+    Object.assign(review, reviewData);
+    return await this.dataSource.manager.save(review);
   }
 
   async deleteReview(id: string) {

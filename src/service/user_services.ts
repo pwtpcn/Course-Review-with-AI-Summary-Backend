@@ -74,7 +74,6 @@ class UserServices {
     const user = await this.getUserByIdOrThrow(id);
     await this.dataSource.manager.update(User, id, {
       username: newUsername,
-      updatedAt: new Date(),
     });
 
     return { oldUsername: user.username, newUsername };
@@ -96,7 +95,6 @@ class UserServices {
     return this.dataSource.manager.update(User, id, {
       hashedPassword,
       salt: newSalt,
-      updatedAt: new Date(),
     });
   }
 

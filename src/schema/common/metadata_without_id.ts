@@ -1,9 +1,9 @@
-import { Column } from "typeorm";
+import { CreateDateColumn, UpdateDateColumn } from "typeorm";
 
 export abstract class MetadataWithoutId {
-    @Column('timestamp', { default: () => "CURRENT_TIMESTAMP" })
+    @CreateDateColumn()
     createdAt!: Date
 
-    @Column('timestamp', { default: () => "CURRENT_TIMESTAMP", onUpdate: "CURRENT_TIMESTAMP" })
+    @UpdateDateColumn()
     updatedAt!: Date
 }

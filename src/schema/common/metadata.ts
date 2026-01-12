@@ -1,12 +1,12 @@
-import { Column, PrimaryColumn } from "typeorm";
+import { CreateDateColumn, PrimaryColumn, UpdateDateColumn } from "typeorm";
 
 export abstract class Metadata {
     @PrimaryColumn('uuid', { default: () => "uuidv7()" })
     id!: string
 
-    @Column('timestamp', { default: () => "CURRENT_TIMESTAMP" })
+    @CreateDateColumn()
     createdAt!: Date
 
-    @Column('timestamp', { default: () => "CURRENT_TIMESTAMP", onUpdate: "CURRENT_TIMESTAMP" })
+    @UpdateDateColumn()
     updatedAt!: Date
 }

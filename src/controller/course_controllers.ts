@@ -97,6 +97,7 @@ export const courseController = new Elysia({
         nameEn: t.Optional(t.String()),
         description: t.Optional(t.String()),
         credits: t.Optional(t.Number()),
+        year: t.Optional(t.Number()),
       }),
       detail: {
         description: "Update a course",

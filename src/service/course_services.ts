@@ -59,17 +59,8 @@ export class CourseServices {
   async updateCourse(id: string, courseData: Partial<Course>) {
     const course = await this.getCourseByIdOrThrow(id);
 
-    const updatedCourse = new Course();
-    updatedCourse.courseId = course.courseId;
-    updatedCourse.nameTh = courseData.nameTh ?? course.nameTh;
-    updatedCourse.nameEn = courseData.nameEn ?? course.nameEn;
-    updatedCourse.description = courseData.description ?? course.description;
-    updatedCourse.credits = courseData.credits ?? course.credits;
-    updatedCourse.year = courseData.year ?? course.year;
-    updatedCourse.updatedAt = new Date();
-
-    await this.dataSource.manager.update(Course, id, updatedCourse);
-    return await this.getCourseByIdOrThrow(id);
+    Object.assign(course, courseData);
+    return await this.dataSource.manager.save(course);
   }
 
   async deleteCourse(id: string) {
