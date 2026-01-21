@@ -32,7 +32,7 @@ export const reviewController = new Elysia({
         description: "Create a new review",
         summary: "Create a new review",
       },
-    }
+    },
   )
 
   .get(
@@ -53,7 +53,7 @@ export const reviewController = new Elysia({
         description: "Get all reviews",
         summary: "Get all reviews",
       },
-    }
+    },
   )
 
   .get(
@@ -71,43 +71,49 @@ export const reviewController = new Elysia({
         description: "Get a review by id",
         summary: "Get a review by id",
       },
-    }
+    },
   )
 
   .get(
     "/getbyuserid/:id",
-    async ({ params: { id } }) => {
+    async ({ params: { id }, query: { sortBy } }) => {
       try {
-        const response = await service.getReviewByUserId(id);
+        const response = await service.getReviewByUserId(id, sortBy);
         return { message: "Reviews fetched successfully", reviews: response };
       } catch (e: any) {
         return { error: e.message };
       }
     },
     {
+      query: t.Object({
+        sortBy: t.Optional(t.Union([t.Literal("newest"), t.Literal("oldest")])),
+      }),
       detail: {
         description: "Get all reviews by user id",
         summary: "Get all reviews by user id",
       },
-    }
+    },
   )
 
   .get(
     "/getbycourseid/:id",
-    async ({ params: { id } }) => {
+    async ({ params: { id }, query: { sortBy } }) => {
       try {
-        const response = await service.getReviewByCourseId(id);
+        const response = await service.getReviewByCourseId(id, sortBy);
         return { message: "Reviews fetched successfully", reviews: response };
       } catch (e: any) {
         return { error: e.message };
       }
     },
     {
+      query: t.Object({
+        sortBy: t.Optional(t.Union([t.Literal("newest"), t.Literal("oldest")])),
+      }),
       detail: {
         description: "Get all reviews by course id",
         summary: "Get all reviews by course id",
       },
-    }
+    },
   )
 
   .put(
@@ -135,7 +141,7 @@ export const reviewController = new Elysia({
         description: "Update a review",
         summary: "Update a review",
       },
-    }
+    },
   )
 
   .delete(
@@ -153,5 +159,5 @@ export const reviewController = new Elysia({
         description: "Delete a review",
         summary: "Delete a review",
       },
-    }
+    },
   );

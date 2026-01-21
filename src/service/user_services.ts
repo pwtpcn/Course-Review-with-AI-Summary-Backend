@@ -62,8 +62,14 @@ class UserServices {
     return user;
   }
 
-  async getAllUsers() {
-    return this.dataSource.manager.find(User);
+  async getAllUsers(sortBy?: "newest" | "oldest") {
+    const order: any = {};
+    if (sortBy === "newest") {
+      order.createdAt = "DESC";
+    } else if (sortBy === "oldest") {
+      order.createdAt = "ASC";
+    }
+    return this.dataSource.manager.find(User, { order });
   }
 
   async getUserByUsername(username: string) {

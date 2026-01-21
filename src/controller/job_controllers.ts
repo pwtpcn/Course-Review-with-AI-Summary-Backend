@@ -30,25 +30,28 @@ export const jobController = new Elysia({
         description: "Create a new job",
         summary: "Create a new job",
       },
-    }
+    },
   )
 
   .get(
     "/getall",
-    async () => {
+    async ({ query: { sortBy } }) => {
       try {
-        const response = await service.getAllJobs();
+        const response = await service.getAllJobs(sortBy);
         return { message: "Jobs fetched successfully", jobs: response };
       } catch (e: any) {
         return { error: e.message };
       }
     },
     {
+      query: t.Object({
+        sortBy: t.Optional(t.Union([t.Literal("newest"), t.Literal("oldest")])),
+      }),
       detail: {
         description: "Get all jobs",
         summary: "Get all jobs",
       },
-    }
+    },
   )
 
   .get(
@@ -66,7 +69,7 @@ export const jobController = new Elysia({
         description: "Get a job by id",
         summary: "Get a job by id",
       },
-    }
+    },
   )
 
   .put(
@@ -91,7 +94,7 @@ export const jobController = new Elysia({
         description: "Update a job",
         summary: "Update a job",
       },
-    }
+    },
   )
 
   .delete(
@@ -109,5 +112,5 @@ export const jobController = new Elysia({
         description: "Delete a job",
         summary: "Delete a job",
       },
-    }
+    },
   );

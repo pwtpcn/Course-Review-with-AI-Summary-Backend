@@ -14,7 +14,7 @@ export const userController = new Elysia({
     jwt({
       name: "jwt",
       secret: process.env.JWT_SECRET as string,
-    })
+    }),
   )
 
   .post(
@@ -50,7 +50,7 @@ export const userController = new Elysia({
         description: "Register a new user",
         summary: "Register a new user",
       },
-    }
+    },
   )
 
   .post(
@@ -59,7 +59,7 @@ export const userController = new Elysia({
       const user = await service.verifyCredentials(identifier, password);
 
       if (!user) {
-        return { error: "Invalid email or password" }; // Unified error message for security
+        return { error: "Invalid email/username or password" }; // Unified error message for security
       }
 
       const accessToken = await jwt.sign({
@@ -79,7 +79,7 @@ export const userController = new Elysia({
         user.email,
         user.username,
         user.role,
-        accessToken
+        accessToken,
       );
 
       return { message: "Login successfully", user: userLoginResponse };
@@ -93,21 +93,24 @@ export const userController = new Elysia({
         description: "Login a user (username or email)",
         summary: "Login a user (username or email)",
       },
-    }
+    },
   )
 
   .get(
     "/getall",
-    async () => {
-      const response = await service.getAllUsers();
+    async ({ query: { sortBy } }) => {
+      const response = await service.getAllUsers(sortBy);
       return { message: "Users fetched successfully", users: response };
     },
     {
+      query: t.Object({
+        sortBy: t.Optional(t.Union([t.Literal("newest"), t.Literal("oldest")])),
+      }),
       detail: {
         description: "Get all users",
         summary: "Get all users",
       },
-    }
+    },
   )
 
   .get(
@@ -125,7 +128,7 @@ export const userController = new Elysia({
         description: "Get a user by id",
         summary: "Get a user by id",
       },
-    }
+    },
   )
 
   .put(
@@ -134,7 +137,7 @@ export const userController = new Elysia({
       try {
         const { oldUsername, newUsername } = await service.changeUsername(
           id,
-          username
+          username,
         );
         return {
           message: "Username changed successfully",
@@ -156,7 +159,7 @@ export const userController = new Elysia({
         description: "Change username of a user",
         summary: "Change username of a user",
       },
-    }
+    },
   )
 
   .put(
@@ -204,7 +207,7 @@ export const userController = new Elysia({
         description: "Change password of a user",
         summary: "Change password of a user",
       },
-    }
+    },
   )
 
   .delete(
@@ -222,5 +225,5 @@ export const userController = new Elysia({
         description: "Delete a user",
         summary: "Delete a user",
       },
-    }
+    },
   );

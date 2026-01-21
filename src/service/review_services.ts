@@ -45,12 +45,24 @@ export class ReviewServices {
     return review;
   }
 
-  async getReviewByUserId(userId: string) {
-    return this.dataSource.manager.find(Review, { where: { userId } });
+  async getReviewByUserId(userId: string, sortBy?: "newest" | "oldest") {
+    const order: any = {};
+    if (sortBy === "newest") {
+      order.createdAt = "DESC";
+    } else if (sortBy === "oldest") {
+      order.createdAt = "ASC";
+    }
+    return this.dataSource.manager.find(Review, { where: { userId }, order });
   }
 
-  async getReviewByCourseId(courseId: string) {
-    return this.dataSource.manager.find(Review, { where: { courseId } });
+  async getReviewByCourseId(courseId: string, sortBy?: "newest" | "oldest") {
+    const order: any = {};
+    if (sortBy === "newest") {
+      order.createdAt = "DESC";
+    } else if (sortBy === "oldest") {
+      order.createdAt = "ASC";
+    }
+    return this.dataSource.manager.find(Review, { where: { courseId }, order });
   }
 
   async updateReview(id: string, reviewData: Partial<Review>) {

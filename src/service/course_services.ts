@@ -30,8 +30,14 @@ export class CourseServices {
     return this.dataSource.manager.save(Course, course);
   }
 
-  async getAllCourses() {
-    return this.dataSource.manager.find(Course);
+  async getAllCourses(sortBy?: "newest" | "oldest") {
+    const order: any = {};
+    if (sortBy === "newest") {
+      order.createdAt = "DESC";
+    } else if (sortBy === "oldest") {
+      order.createdAt = "ASC";
+    }
+    return this.dataSource.manager.find(Course, { order });
   }
 
   async getCourseById(id: string) {

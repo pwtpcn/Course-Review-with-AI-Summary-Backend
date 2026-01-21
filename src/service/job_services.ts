@@ -17,8 +17,14 @@ export class JobServices {
     return this.dataSource.manager.save(Job, job);
   }
 
-  async getAllJobs() {
-    return this.dataSource.manager.find(Job);
+  async getAllJobs(sortBy?: "newest" | "oldest") {
+    const order: any = {};
+    if (sortBy === "newest") {
+      order.createdAt = "DESC";
+    } else if (sortBy === "oldest") {
+      order.createdAt = "ASC";
+    }
+    return this.dataSource.manager.find(Job, { order });
   }
 
   async getJobById(id: string) {

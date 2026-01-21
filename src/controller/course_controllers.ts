@@ -39,25 +39,28 @@ export const courseController = new Elysia({
         description: "Create a new course",
         summary: "Create a new course",
       },
-    }
+    },
   )
 
   .get(
     "/getall",
-    async () => {
+    async ({ query: { sortBy } }) => {
       try {
-        const response = await service.getAllCourses();
+        const response = await service.getAllCourses(sortBy);
         return { message: "Courses fetched successfully", courses: response };
       } catch (e: any) {
         return { error: e.message };
       }
     },
     {
+      query: t.Object({
+        sortBy: t.Optional(t.Union([t.Literal("newest"), t.Literal("oldest")])),
+      }),
       detail: {
         description: "Get all courses",
         summary: "Get all courses",
       },
-    }
+    },
   )
 
   .get(
@@ -75,7 +78,7 @@ export const courseController = new Elysia({
         description: "Get a course by id",
         summary: "Get a course by id",
       },
-    }
+    },
   )
 
   .put(
@@ -103,7 +106,7 @@ export const courseController = new Elysia({
         description: "Update a course",
         summary: "Update a course",
       },
-    }
+    },
   )
 
   .delete(
@@ -121,5 +124,5 @@ export const courseController = new Elysia({
         description: "Delete a course",
         summary: "Delete a course",
       },
-    }
+    },
   );
