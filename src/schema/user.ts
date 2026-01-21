@@ -4,10 +4,10 @@ import { Review } from "./review";
 
 @Entity()
 export class User extends Metadata {
-  @Column({unique: true})
+  @Column({ unique: true })
   email!: string;
 
-  @Column({unique: true})
+  @Column({ unique: true })
   username!: string;
 
   @Column()
@@ -19,6 +19,6 @@ export class User extends Metadata {
   @Column({ default: "user" })
   role!: string;
 
-  @OneToMany(() => Review, (review) => review.userId)
+  @OneToMany(() => Review, (review) => review.user)
   reviews!: Review[];
 }

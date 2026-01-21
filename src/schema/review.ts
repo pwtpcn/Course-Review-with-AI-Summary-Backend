@@ -1,13 +1,24 @@
-import { Column, Entity } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 import { Metadata } from "./common/metadata";
+
+import { User } from "./user";
+import { Course } from "./course";
 
 @Entity()
 export class Review extends Metadata {
   @Column()
   userId!: string;
 
+  @ManyToOne(() => User, (user) => user.reviews)
+  @JoinColumn({ name: "userId" })
+  user!: User;
+
   @Column()
   courseId!: string;
+
+  @ManyToOne(() => Course, (course) => course.reviews)
+  @JoinColumn({ name: "courseId" })
+  course!: Course;
 
   @Column()
   content!: string;

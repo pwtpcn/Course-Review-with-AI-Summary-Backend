@@ -1,4 +1,11 @@
-import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryColumn } from "typeorm";
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  OneToMany,
+  PrimaryColumn,
+} from "typeorm";
 import { MetadataWithoutId } from "./common/metadata_without_id";
 import { Job } from "./job";
 import { Review } from "./review";
@@ -28,7 +35,7 @@ export class Course extends MetadataWithoutId {
   @ManyToMany(() => Job, (job) => job.courses)
   jobs!: Job[];
 
-  @OneToMany(() => Review, (review) => review.courseId)
+  @OneToMany(() => Review, (review) => review.course)
   reviews!: Review[];
 
   @JoinTable({ name: "teacher_courses" })
