@@ -9,7 +9,7 @@ import {
 import { MetadataWithoutId } from "./common/metadata_without_id";
 import { Job } from "./job";
 import { Review } from "./review";
-import { Teacher } from "./teacher";
+// import { Teacher } from "./teacher";
 
 @Entity()
 export class Course extends MetadataWithoutId {
@@ -38,7 +38,7 @@ export class Course extends MetadataWithoutId {
   @OneToMany(() => Review, (review) => review.course)
   reviews!: Review[];
 
-  @JoinTable({ name: "teacher_courses" })
-  @ManyToMany(() => Teacher, (teacher) => teacher.courses)
-  teachers!: Teacher[];
+  // @JoinTable({ name: "teacher_courses" })
+  // @ManyToMany(() => Teacher, (teacher) => teacher.courses)
+  // teachers!: Teacher[];
 }

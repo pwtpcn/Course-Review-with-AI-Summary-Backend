@@ -2,7 +2,9 @@ import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 import { Metadata } from "./common/metadata";
 
 import { User } from "./user";
+import type { User as UserType } from "./user";
 import { Course } from "./course";
+import type { Course as CourseType } from "./course";
 
 @Entity()
 export class Review extends Metadata {
@@ -11,14 +13,14 @@ export class Review extends Metadata {
 
   @ManyToOne(() => User, (user) => user.reviews)
   @JoinColumn({ name: "userId" })
-  user!: User;
+  user!: UserType;
 
   @Column()
   courseId!: string;
 
   @ManyToOne(() => Course, (course) => course.reviews)
   @JoinColumn({ name: "courseId" })
-  course!: Course;
+  course!: CourseType;
 
   @Column()
   content!: string;
