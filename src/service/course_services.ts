@@ -56,12 +56,6 @@ export class CourseServices {
     return this.dataSource.manager.find(Course, { where: { year } });
   }
 
-  async getCourseByTeacherId(teacherId: string) {
-    return this.dataSource.manager.find(Course, {
-      where: { teachers: { id: teacherId } },
-    });
-  }
-
   async updateCourse(id: string, courseData: Partial<Course>) {
     const course = await this.getCourseByIdOrThrow(id);
 
