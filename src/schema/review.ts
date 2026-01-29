@@ -1,10 +1,11 @@
-import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 import { Metadata } from "./common/metadata";
 
 import { User } from "./user";
 import type { User as UserType } from "./user";
 import { Course } from "./course";
 import type { Course as CourseType } from "./course";
+import { Report } from "./report";
 
 @Entity()
 export class Review extends Metadata {
@@ -42,4 +43,7 @@ export class Review extends Metadata {
 
   @Column({ default: 0 })
   dislike!: number;
+
+  @OneToMany(() => Report, (report) => report.review)
+  reports!: Report[];
 }
