@@ -15,7 +15,7 @@ export class ReportService {
     report.status = reportData.status!;
     report.userId = reportData.userId!;
     report.reviewId = reportData.reviewId!;
-    
+
     return this.dataSource.manager.save(Report, report);
   }
 
@@ -55,6 +55,18 @@ export class ReportService {
     const report = await this.getReportByIdOrThrow(id);
     await this.dataSource.manager.delete(Report, id);
     return report;
+  }
+
+  async cancelReport(id: string) {
+    const report = await this.getReportByIdOrThrow(id);
+    report.status = "rejected";
+    return this.dataSource.manager.save(Report, report);
+  }
+
+  async approveReport(id: string) {
+    const report = await this.getReportByIdOrThrow(id);
+    report.status = "approved";
+    return this.dataSource.manager.save(Report, report);
   }
 }
 

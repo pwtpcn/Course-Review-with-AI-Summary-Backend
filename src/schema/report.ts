@@ -4,15 +4,19 @@ import { Metadata } from "./common/metadata";
 import { User } from "./user";
 import type { User as UserType } from "./user";
 import { Review } from "./review";
-import type { Review as ReviewType } from "./review";   
+import type { Review as ReviewType } from "./review";
 
 @Entity()
 export class Report extends Metadata {
   @Column()
   content!: string;
 
-  @Column()
-  status!: string;
+  @Column({
+    type: "enum",
+    enum: ["pending", "rejected", "approved"],
+    default: "pending",
+  })
+  status!: "pending" | "rejected" | "approved";
 
   @Column()
   userId!: string;
