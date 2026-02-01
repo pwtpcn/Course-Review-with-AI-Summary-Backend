@@ -1,6 +1,7 @@
 import { dataSource } from "../data-source";
 import { DataSource } from "typeorm";
 import { Report } from "../schema/report";
+import { CreateReportInput } from "../dto/report.dto";
 
 export class ReportService {
   private dataSource: DataSource;
@@ -9,12 +10,12 @@ export class ReportService {
     this.dataSource = dataSource;
   }
 
-  async createReport(reportData: Partial<Report>) {
+  async createReport(reportData: CreateReportInput) {
     const report = new Report();
-    report.content = reportData.content!;
-    report.status = reportData.status!;
-    report.userId = reportData.userId!;
-    report.reviewId = reportData.reviewId!;
+    report.content = reportData.content;
+    report.status = reportData.status;
+    report.userId = reportData.userId;
+    report.reviewId = reportData.reviewId;
 
     return this.dataSource.manager.save(Report, report);
   }
