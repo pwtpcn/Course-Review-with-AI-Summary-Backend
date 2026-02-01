@@ -17,8 +17,11 @@ export class User extends Metadata {
   @Column()
   salt!: string;
 
-  @Column({ default: "user" })
-  role!: string;
+  @Column({ 
+    type: "enum",
+    enum: ["user", "admin"],
+    default: "user" })
+  role!: "user" | "admin";
 
   @OneToMany(() => Review, (review) => review.user)
   reviews!: Review[];
