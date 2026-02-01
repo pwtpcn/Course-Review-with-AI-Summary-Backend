@@ -10,14 +10,16 @@ export const jobController = new Elysia({
 
   .post(
     "/create",
-    async ({ body }) => {
+    async ({ body, set }) => {
       try {
         const response = await service.createJob({
           name: body.name,
           details: body.details,
         });
+        set.status = 201;
         return { message: "Job created successfully", job: response };
       } catch (e: any) {
+        set.status = 500;
         return { error: e.message };
       }
     },
@@ -35,11 +37,13 @@ export const jobController = new Elysia({
 
   .get(
     "/getall",
-    async ({ query: { sortBy } }) => {
+    async ({ query: { sortBy }, set }) => {
       try {
         const response = await service.getAllJobs(sortBy);
+        set.status = 200;
         return { message: "Jobs fetched successfully", jobs: response };
       } catch (e: any) {
+        set.status = 500;
         return { error: e.message };
       }
     },
@@ -56,11 +60,17 @@ export const jobController = new Elysia({
 
   .get(
     "/getbyid/:id",
-    async ({ params: { id } }) => {
+    async ({ params: { id }, set }) => {
       try {
         const response = await service.getJobByIdOrThrow(id);
+        set.status = 200;
         return { message: "Job fetched successfully", job: response };
       } catch (e: any) {
+        if (e.message == "Job not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
         return { error: e.message };
       }
     },
@@ -74,11 +84,17 @@ export const jobController = new Elysia({
 
   .put(
     "/update/:id",
-    async ({ params: { id }, body }) => {
+    async ({ params: { id }, body, set }) => {
       try {
         const response = await service.updateJob(id, body);
+        set.status = 200;
         return { message: "Job updated successfully", job: response };
       } catch (e: any) {
+        if (e.message == "Job not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
         return { error: e.message };
       }
     },
@@ -99,11 +115,17 @@ export const jobController = new Elysia({
 
   .delete(
     "/delete/:id",
-    async ({ params: { id } }) => {
+    async ({ params: { id }, set }) => {
       try {
         const deletedJob = await service.deleteJob(id);
+        set.status = 200;
         return { message: "Job deleted successfully", deletedJob };
       } catch (e: any) {
+        if (e.message == "Job not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
         return { error: e.message };
       }
     },

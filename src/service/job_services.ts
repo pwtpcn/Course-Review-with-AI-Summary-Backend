@@ -1,6 +1,7 @@
 import { Job } from "../schema/job";
 import { dataSource } from "../data-source";
 import { DataSource } from "typeorm";
+import { CreateJobInput, UpdateJobInput } from "../dto/job.dto";
 
 export class JobServices {
   private dataSource: DataSource;
@@ -9,7 +10,7 @@ export class JobServices {
     this.dataSource = dataSource;
   }
 
-  async createJob(jobData: Partial<Job>) {
+  async createJob(jobData: CreateJobInput) {
     const job = new Job();
     job.name = jobData.name!;
     job.details = jobData.details!;
@@ -39,7 +40,7 @@ export class JobServices {
     return job;
   }
 
-  async updateJob(id: string, jobData: Partial<Job>) {
+  async updateJob(id: string, jobData: UpdateJobInput) {
     const job = await this.getJobByIdOrThrow(id);
 
     Object.assign(job, jobData);
