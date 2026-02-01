@@ -1,6 +1,7 @@
 import { Course } from "../schema/course";
 import { dataSource } from "../data-source";
 import { DataSource } from "typeorm";
+import { CreateCourseInput, UpdateCourseInput } from "../dto/course.dto";
 
 export class CourseServices {
   private dataSource: DataSource;
@@ -9,23 +10,19 @@ export class CourseServices {
     this.dataSource = dataSource;
   }
 
-  async createCourse(courseData: Partial<Course>) {
-    if (!courseData.courseId) {
-      throw new Error("Course ID is required");
-    }
-
-    const existsCourse = await this.getCourseById(courseData.courseId!);
+  async createCourse(courseData: CreateCourseInput) {
+    const existsCourse = await this.getCourseById(courseData.courseId);
     if (existsCourse) {
       throw new Error("Course already exists");
     }
 
     const course = new Course();
     course.courseId = courseData.courseId;
-    course.nameTh = courseData.nameTh!;
-    course.nameEn = courseData.nameEn!;
-    course.description = courseData.description!;
-    course.credits = courseData.credits!;
-    course.year = courseData.year!;
+    course.nameTh = courseData.nameTh;
+    course.nameEn = courseData.nameEn;
+    course.description = courseData.description;
+    course.credits = courseData.credits;
+    course.year = courseData.year;
 
     return this.dataSource.manager.save(Course, course);
   }
@@ -56,7 +53,7 @@ export class CourseServices {
     return this.dataSource.manager.find(Course, { where: { year } });
   }
 
-  async updateCourse(id: string, courseData: Partial<Course>) {
+  async updateCourse(id: string, courseData: UpdateCourseInput) {
     const course = await this.getCourseByIdOrThrow(id);
 
     Object.assign(course, courseData);

@@ -11,7 +11,7 @@ export const courseController = new Elysia({
 
   .post(
     "/create",
-    async ({ body }) => {
+    async ({ body, set }) => {
       try {
         const response = await service.createCourse({
           courseId: body.courseId,
@@ -21,8 +21,14 @@ export const courseController = new Elysia({
           credits: body.credits,
           year: body.year,
         });
+        set.status = 201;
         return { message: "Course created successfully", course: response };
       } catch (e: any) {
+        if (e.message === "Course already exists") {
+          set.status = 409;
+          return { error: e.message };
+        }
+        set.status = 500;
         return { error: e.message };
       }
     },
@@ -44,11 +50,13 @@ export const courseController = new Elysia({
 
   .get(
     "/getall",
-    async ({ query: { sortBy } }) => {
+    async ({ query: { sortBy }, set }) => {
       try {
         const response = await service.getAllCourses(sortBy);
+        set.status = 200;
         return { message: "Courses fetched successfully", courses: response };
       } catch (e: any) {
+        set.status = 500;
         return { error: e.message };
       }
     },
@@ -65,11 +73,17 @@ export const courseController = new Elysia({
 
   .get(
     "/getbyid/:id",
-    async ({ params: { id } }) => {
+    async ({ params: { id }, set }) => {
       try {
         const response = await service.getCourseByIdOrThrow(id);
+        set.status = 200;
         return { message: "Course fetched successfully", course: response };
       } catch (e: any) {
+        if (e.message === "Course not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
         return { error: e.message };
       }
     },
@@ -83,11 +97,17 @@ export const courseController = new Elysia({
 
   .put(
     "/update/:id",
-    async ({ params: { id }, body }) => {
+    async ({ params: { id }, body, set }) => {
       try {
         const response = await service.updateCourse(id, body);
+        set.status = 200;
         return { message: "Course updated successfully", course: response };
       } catch (e: any) {
+        if (e.message === "Course not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
         return { error: e.message };
       }
     },
@@ -111,11 +131,17 @@ export const courseController = new Elysia({
 
   .delete(
     "/delete/:id",
-    async ({ params: { id } }) => {
+    async ({ params: { id }, set }) => {
       try {
         const deletedCourse = await service.deleteCourse(id);
+        set.status = 200;
         return { message: "Course deleted successfully", deletedCourse };
       } catch (e: any) {
+        if (e.message === "Course not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
         return { error: e.message };
       }
     },
