@@ -13,9 +13,7 @@ export const reportController = new Elysia({
     "/create",
     async ({ body, set }) => {
       try {
-        const report = await reportService.createReport(
-          body as CreateReportInput,
-        );
+        const report = await reportService.createReport(body);
         set.status = 201;
         return { message: "Report created successfully", report };
       } catch (e: any) {
@@ -26,17 +24,20 @@ export const reportController = new Elysia({
     {
       body: t.Object({
         content: t.String(),
-        status: t.String(),
         userId: t.String(),
         reviewId: t.String(),
       }),
+      detail: {
+        description: "Create a new report",
+        summary: "Create a new report",
+      },
     },
   )
+
   .get(
     "/getall",
-    async ({ query, set }) => {
+    async ({ query: {sortBy}, set }) => {
       try {
-        const sortBy = query.sortBy as "newest" | "oldest" | undefined;
         const reports = await reportService.getAllReports(sortBy);
         set.status = 200;
         return { message: "Reports fetched successfully", reports };
@@ -49,12 +50,88 @@ export const reportController = new Elysia({
       query: t.Object({
         sortBy: t.Optional(t.Union([t.Literal("newest"), t.Literal("oldest")])),
       }),
+      detail: {
+        description: "Get all reports",
+        summary: "Get all reports",
+      },
     },
   )
 
-  .patch("/cancel/:id", async ({ params, set }) => {
+  .get(
+    "/getbyid/:id",
+    async ({ params: { id }, set }) => {
+      try {
+        const report = await reportService.getReportByIdOrThrow(id);
+        set.status = 200;
+        return { message: "Report fetched successfully", report };
+      } catch (e: any) {
+        if (e.message === "Report not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
+        return { error: e.message };
+      }
+    },
+    {
+      detail: {
+        description: "Get a report by id",
+        summary: "Get a report by id",
+      },
+    },
+  )
+
+  .get(
+    "/getbyreviewid/:reviewId",
+    async ({ params: { reviewId }, set }) => {
+      try {
+        const reports = await reportService.getReportByReviewId(reviewId);
+        set.status = 200;
+        return { message: "Report fetched successfully", reports };
+      } catch (e: any) {
+        if (e.message === "Report not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
+        return { error: e.message };
+      }
+    },
+    {
+      detail: {
+        description: "Get a report by review id",
+        summary: "Get a report by review id",
+      },
+    },
+  )
+
+  .get(
+    "/getbyuserid/:userId",
+    async ({ params: { userId }, set }) => {
+      try {
+        const reports = await reportService.getReportByUserId(userId);
+        set.status = 200;
+        return { message: "Report fetched successfully", reports };
+      } catch (e: any) {
+        if (e.message === "Report not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
+        return { error: e.message };
+      }
+    },
+    {
+      detail: {
+        description: "Get a report by user id",
+        summary: "Get a report by user id",
+      },
+    },
+  )
+
+  .patch("/cancel/:id", async ({ params: {id}, set }) => {
     try {
-      const report = await reportService.cancelReport(params.id);
+      const report = await reportService.cancelReport(id);
       set.status = 200;
       return { message: "Report canceled successfully", report };
     } catch (e: any) {
@@ -65,11 +142,17 @@ export const reportController = new Elysia({
       set.status = 500;
       return { error: e.message };
     }
+  },
+  {
+    detail: {
+      description: "Cancel a report",
+      summary: "Cancel a report",
+    },
   })
 
-  .patch("/approve/:id", async ({ params, set }) => {
+  .patch("/approve/:id", async ({ params: {id}, set }) => {
     try {
-      const report = await reportService.approveReport(params.id);
+      const report = await reportService.approveReport(id);
       set.status = 200;
       return { message: "Report approved successfully", report };
     } catch (e: any) {
@@ -80,11 +163,17 @@ export const reportController = new Elysia({
       set.status = 500;
       return { error: e.message };
     }
+  },
+  {
+    detail: {
+      description: "Approve a report",
+      summary: "Approve a report",
+    },
   })
 
-  .delete("/delete/:id", async ({ params, set }) => {
+  .delete("/delete/:id", async ({ params: {id}, set }) => {
     try {
-      const deletedReport = await reportService.deleteReport(params.id);
+      const deletedReport = await reportService.deleteReport(id);
       set.status = 200;
       return { message: "Report deleted successfully", deletedReport };
     } catch (e: any) {
@@ -95,4 +184,10 @@ export const reportController = new Elysia({
       set.status = 500;
       return { error: e.message };
     }
+  },
+  {
+    detail: {
+      description: "Delete a report",
+      summary: "Delete a report",
+    },
   })

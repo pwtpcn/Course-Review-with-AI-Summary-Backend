@@ -13,7 +13,6 @@ export class ReportService {
   async createReport(reportData: CreateReportInput) {
     const report = new Report();
     report.content = reportData.content;
-    report.status = reportData.status;
     report.userId = reportData.userId;
     report.reviewId = reportData.reviewId;
 
@@ -43,13 +42,13 @@ export class ReportService {
   }
 
   async getReportByReviewId(reviewId: string) {
-    const report = await this.getReportByIdOrThrow(reviewId);
-    return report;
+    const reports = await this.dataSource.manager.find(Report, { where: { reviewId } });
+    return reports;
   }
 
   async getReportByUserId(userId: string) {
-    const report = await this.getReportByIdOrThrow(userId);
-    return report;
+    const reports = await this.dataSource.manager.find(Report, { where: { userId } });
+    return reports;
   }
 
   async deleteReport(id: string) {
