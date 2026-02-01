@@ -44,6 +44,9 @@ export class Review extends Metadata {
   @Column({ default: 0 })
   dislike!: number;
 
+  @Column({ default: false })
+  isEdited!: boolean;
+
   @OneToMany(() => Report, (report) => report.review)
   reports!: Report[];
 }

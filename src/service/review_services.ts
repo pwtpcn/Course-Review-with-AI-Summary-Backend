@@ -1,6 +1,7 @@
 import { DataSource } from "typeorm";
 import { dataSource } from "../data-source";
 import { Review } from "../schema/review";
+import { CreateReviewInput, UpdateReviewInput } from "../dto/review.dto";
 
 export class ReviewServices {
   private dataSource: DataSource;
@@ -9,7 +10,7 @@ export class ReviewServices {
     this.dataSource = dataSource;
   }
 
-  async createReview(reviewData: Partial<Review>) {
+  async createReview(reviewData: CreateReviewInput) {
     const review = new Review();
     review.userId = reviewData.userId!;
     review.courseId = reviewData.courseId!;
@@ -65,10 +66,15 @@ export class ReviewServices {
     return this.dataSource.manager.find(Review, { where: { courseId }, order });
   }
 
-  async updateReview(id: string, reviewData: Partial<Review>) {
+  async updateReview(id: string, reviewData: UpdateReviewInput) {
     const review = await this.getReviewByIdOrThrow(id);
 
+    if (review.isEdited) {
+      throw new Error("Review has already been edited");
+    }
+
     Object.assign(review, reviewData);
+    review.isEdited = true;
     return await this.dataSource.manager.save(review);
   }
 
