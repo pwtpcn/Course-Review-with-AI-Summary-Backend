@@ -13,16 +13,9 @@ export const courseController = new Elysia({
     "/create",
     async ({ body, set }) => {
       try {
-        const response = await service.createCourse({
-          courseId: body.courseId,
-          nameTh: body.nameTh,
-          nameEn: body.nameEn,
-          description: body.description,
-          credits: body.credits,
-          year: body.year,
-        });
+        const course = await service.createCourse(body);
         set.status = 201;
-        return { message: "Course created successfully", course: response };
+        return { message: "Course created successfully", course };
       } catch (e: any) {
         if (e.message === "Course already exists") {
           set.status = 409;
@@ -52,9 +45,9 @@ export const courseController = new Elysia({
     "/getall",
     async ({ query: { sortBy }, set }) => {
       try {
-        const response = await service.getAllCourses(sortBy);
+        const courses = await service.getAllCourses(sortBy);
         set.status = 200;
-        return { message: "Courses fetched successfully", courses: response };
+        return { message: "Courses fetched successfully", courses };
       } catch (e: any) {
         set.status = 500;
         return { error: e.message };
@@ -75,9 +68,9 @@ export const courseController = new Elysia({
     "/getbyid/:id",
     async ({ params: { id }, set }) => {
       try {
-        const response = await service.getCourseByIdOrThrow(id);
+        const course = await service.getCourseByIdOrThrow(id);
         set.status = 200;
-        return { message: "Course fetched successfully", course: response };
+        return { message: "Course fetched successfully", course };
       } catch (e: any) {
         if (e.message === "Course not found") {
           set.status = 404;
@@ -99,9 +92,9 @@ export const courseController = new Elysia({
     "/update/:id",
     async ({ params: { id }, body, set }) => {
       try {
-        const response = await service.updateCourse(id, body);
+        const updatedCourse = await service.updateCourse(id, body);
         set.status = 200;
-        return { message: "Course updated successfully", course: response };
+        return { message: "Course updated successfully", course: updatedCourse };
       } catch (e: any) {
         if (e.message === "Course not found") {
           set.status = 404;

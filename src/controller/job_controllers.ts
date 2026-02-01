@@ -12,12 +12,9 @@ export const jobController = new Elysia({
     "/create",
     async ({ body, set }) => {
       try {
-        const response = await service.createJob({
-          name: body.name,
-          details: body.details,
-        });
+        const job = await service.createJob(body);
         set.status = 201;
-        return { message: "Job created successfully", job: response };
+        return { message: "Job created successfully", job };
       } catch (e: any) {
         set.status = 500;
         return { error: e.message };
@@ -39,9 +36,9 @@ export const jobController = new Elysia({
     "/getall",
     async ({ query: { sortBy }, set }) => {
       try {
-        const response = await service.getAllJobs(sortBy);
+        const jobs = await service.getAllJobs(sortBy);
         set.status = 200;
-        return { message: "Jobs fetched successfully", jobs: response };
+        return { message: "Jobs fetched successfully", jobs };
       } catch (e: any) {
         set.status = 500;
         return { error: e.message };
@@ -62,9 +59,9 @@ export const jobController = new Elysia({
     "/getbyid/:id",
     async ({ params: { id }, set }) => {
       try {
-        const response = await service.getJobByIdOrThrow(id);
+        const job = await service.getJobByIdOrThrow(id);
         set.status = 200;
-        return { message: "Job fetched successfully", job: response };
+        return { message: "Job fetched successfully", job };
       } catch (e: any) {
         if (e.message == "Job not found") {
           set.status = 404;
@@ -86,9 +83,9 @@ export const jobController = new Elysia({
     "/update/:id",
     async ({ params: { id }, body, set }) => {
       try {
-        const response = await service.updateJob(id, body);
+        const updatedJob = await service.updateJob(id, body);
         set.status = 200;
-        return { message: "Job updated successfully", job: response };
+        return { message: "Job updated successfully", job: updatedJob };
       } catch (e: any) {
         if (e.message == "Job not found") {
           set.status = 404;

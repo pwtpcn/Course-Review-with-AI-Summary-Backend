@@ -12,9 +12,9 @@ export const reviewController = new Elysia({
     "/create",
     async ({ body, set }) => {
       try {
-        const response = await service.createReview(body);
+        const review = await service.createReview(body);
         set.status = 201;
-        return { message: "Review created successfully", review: response };
+        return { message: "Review created successfully", review };
       } catch (e: any) {
         set.status = 500;
         return { error: e.message };
@@ -41,9 +41,9 @@ export const reviewController = new Elysia({
     "/getall",
     async ({ query: { sortBy }, set }) => {
       try {
-        const response = await service.getAllReviews(sortBy);
+        const reviews = await service.getAllReviews(sortBy);
         set.status = 200;
-        return { message: "Reviews fetched successfully", reviews: response };
+        return { message: "Reviews fetched successfully", reviews };
       } catch (e: any) {
         set.status = 500;
         return { error: e.message };
@@ -64,9 +64,9 @@ export const reviewController = new Elysia({
     "/getbyid/:id",
     async ({ params: { id }, set }) => {
       try {
-        const response = await service.getReviewByIdOrThrow(id);
+        const review = await service.getReviewByIdOrThrow(id);
         set.status = 200;
-        return { message: "Review fetched successfully", review: response };
+        return { message: "Review fetched successfully", review };
       } catch (e: any) {
         if (e.message === "Review not found") {
           set.status = 404;
@@ -88,9 +88,9 @@ export const reviewController = new Elysia({
     "/getbyuserid/:id",
     async ({ params: { id }, query: { sortBy }, set }) => {
       try {
-        const response = await service.getReviewByUserId(id, sortBy);
+        const reviews = await service.getReviewByUserId(id, sortBy);
         set.status = 200;
-        return { message: "Reviews fetched successfully", reviews: response };
+        return { message: "Reviews fetched successfully", reviews };
       } catch (e: any) {
         set.status = 500;
         return { error: e.message };
@@ -111,9 +111,9 @@ export const reviewController = new Elysia({
     "/getbycourseid/:id",
     async ({ params: { id }, query: { sortBy }, set }) => {
       try {
-        const response = await service.getReviewByCourseId(id, sortBy);
+        const reviews = await service.getReviewByCourseId(id, sortBy);
         set.status = 200;
-        return { message: "Reviews fetched successfully", reviews: response };
+        return { message: "Reviews fetched successfully", reviews };
       } catch (e: any) {
         set.status = 500;
         return { error: e.message };
@@ -134,9 +134,9 @@ export const reviewController = new Elysia({
     "/update/:id",
     async ({ params: { id }, body, set }) => {
       try {
-        const response = await service.updateReview(id, body);
+        const updatedReview = await service.updateReview(id, body);
         set.status = 200;
-        return { message: "Review updated successfully", review: response };
+        return { message: "Review updated successfully", review: updatedReview };
       } catch (e: any) {
         if (e.message === "Review not found") {
           set.status = 404;
