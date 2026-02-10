@@ -23,7 +23,7 @@ export class ReviewServices {
     return this.dataSource.manager.save(Review, review);
   }
 
-  async getAllReviews(sortBy?: "newest" | "oldest") {
+  async getAllReviews(sortBy?: "newest" | "oldest", includeHidden = false) {
     const order: any = {};
     if (sortBy === "newest") {
       order.createdAt = "DESC";
@@ -31,7 +31,15 @@ export class ReviewServices {
       order.createdAt = "ASC";
     }
 
-    return this.dataSource.manager.find(Review, { order });
+    const where: any = {};
+    if (!includeHidden) {
+      where.status = "active";
+    }
+
+    return this.dataSource.manager.find(Review, {
+      where,
+      order,
+    });
   }
 
   async getReviewById(id: string) {
@@ -46,24 +54,50 @@ export class ReviewServices {
     return review;
   }
 
-  async getReviewByUserId(userId: string, sortBy?: "newest" | "oldest") {
+  async getReviewByUserId(
+    userId: string,
+    sortBy?: "newest" | "oldest",
+    includeHidden = false,
+  ) {
     const order: any = {};
     if (sortBy === "newest") {
       order.createdAt = "DESC";
     } else if (sortBy === "oldest") {
       order.createdAt = "ASC";
     }
-    return this.dataSource.manager.find(Review, { where: { userId }, order });
+
+    const where: any = { userId };
+    if (!includeHidden) {
+      where.status = "active";
+    }
+
+    return this.dataSource.manager.find(Review, {
+      where,
+      order,
+    });
   }
 
-  async getReviewByCourseId(courseId: string, sortBy?: "newest" | "oldest") {
+  async getReviewByCourseId(
+    courseId: string,
+    sortBy?: "newest" | "oldest",
+    includeHidden = false,
+  ) {
     const order: any = {};
     if (sortBy === "newest") {
       order.createdAt = "DESC";
     } else if (sortBy === "oldest") {
       order.createdAt = "ASC";
     }
-    return this.dataSource.manager.find(Review, { where: { courseId }, order });
+
+    const where: any = { courseId };
+    if (!includeHidden) {
+      where.status = "active";
+    }
+
+    return this.dataSource.manager.find(Review, {
+      where,
+      order,
+    });
   }
 
   async updateReview(id: string, reviewData: UpdateReviewInput) {
@@ -83,6 +117,12 @@ export class ReviewServices {
     await this.dataSource.manager.delete(Review, id);
 
     return deletedReview;
+  }
+
+  async hideReview(id: string) {
+    const review = await this.getReviewByIdOrThrow(id);
+    review.status = "hidden";
+    return this.dataSource.manager.save(Review, review);
   }
 }
 

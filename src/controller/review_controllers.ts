@@ -39,9 +39,10 @@ export const reviewController = new Elysia({
 
   .get(
     "/getall",
-    async ({ query: { sortBy }, set }) => {
+    async ({ query: { sortBy, includeHidden }, set }) => {
       try {
-        const reviews = await service.getAllReviews(sortBy);
+        const isHidden = includeHidden === "true";
+        const reviews = await service.getAllReviews(sortBy, isHidden);
         set.status = 200;
         return { message: "Reviews fetched successfully", reviews };
       } catch (e: any) {
@@ -52,6 +53,7 @@ export const reviewController = new Elysia({
     {
       query: t.Object({
         sortBy: t.Optional(t.Union([t.Literal("newest"), t.Literal("oldest")])),
+        includeHidden: t.Optional(t.String()),
       }),
       detail: {
         description: "Get all reviews",
@@ -86,9 +88,10 @@ export const reviewController = new Elysia({
 
   .get(
     "/getbyuserid/:id",
-    async ({ params: { id }, query: { sortBy }, set }) => {
+    async ({ params: { id }, query: { sortBy, includeHidden }, set }) => {
       try {
-        const reviews = await service.getReviewByUserId(id, sortBy);
+        const isHidden = includeHidden === "true";
+        const reviews = await service.getReviewByUserId(id, sortBy, isHidden);
         set.status = 200;
         return { message: "Reviews fetched successfully", reviews };
       } catch (e: any) {
@@ -99,6 +102,7 @@ export const reviewController = new Elysia({
     {
       query: t.Object({
         sortBy: t.Optional(t.Union([t.Literal("newest"), t.Literal("oldest")])),
+        includeHidden: t.Optional(t.String()),
       }),
       detail: {
         description: "Get all reviews by user id",
@@ -109,9 +113,14 @@ export const reviewController = new Elysia({
 
   .get(
     "/getbycourseid/:id",
-    async ({ params: { id }, query: { sortBy }, set }) => {
+    async ({ params: { id }, query: { sortBy, includeHidden }, set }) => {
       try {
-        const reviews = await service.getReviewByCourseId(id, sortBy);
+        const isHidden = includeHidden === "true";
+        const reviews = await service.getReviewByCourseId(
+          id,
+          sortBy,
+          isHidden,
+        );
         set.status = 200;
         return { message: "Reviews fetched successfully", reviews };
       } catch (e: any) {
@@ -122,6 +131,7 @@ export const reviewController = new Elysia({
     {
       query: t.Object({
         sortBy: t.Optional(t.Union([t.Literal("newest"), t.Literal("oldest")])),
+        includeHidden: t.Optional(t.String()),
       }),
       detail: {
         description: "Get all reviews by course id",
@@ -136,7 +146,10 @@ export const reviewController = new Elysia({
       try {
         const updatedReview = await service.updateReview(id, body);
         set.status = 200;
-        return { message: "Review updated successfully", review: updatedReview };
+        return {
+          message: "Review updated successfully",
+          review: updatedReview,
+        };
       } catch (e: any) {
         if (e.message === "Review not found") {
           set.status = 404;
@@ -184,6 +197,30 @@ export const reviewController = new Elysia({
       detail: {
         description: "Delete a review",
         summary: "Delete a review",
+      },
+    },
+  )
+
+  .patch(
+    "/hide/:id",
+    async ({ params: { id }, set }) => {
+      try {
+        const review = await service.hideReview(id);
+        set.status = 200;
+        return { message: "Review hidden successfully", review };
+      } catch (e: any) {
+        if (e.message === "Review not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
+        return { error: e.message };
+      }
+    },
+    {
+      detail: {
+        description: "Hide a review",
+        summary: "Hide a review",
       },
     },
   );

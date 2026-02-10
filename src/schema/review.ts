@@ -47,6 +47,13 @@ export class Review extends Metadata {
   @Column({ default: false })
   isEdited!: boolean;
 
+  @Column({
+    type: "enum",
+    enum: ["active", "hidden"],
+    default: "active",
+  })
+  status!: "active" | "hidden";
+
   @OneToMany(() => Report, (report) => report.review)
   reports!: Report[];
 }
