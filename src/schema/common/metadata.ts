@@ -1,7 +1,7 @@
 import { CreateDateColumn, PrimaryColumn, UpdateDateColumn } from "typeorm";
 
 export abstract class Metadata {
-  @PrimaryColumn("uuid", { default: () => "uuidv7()" })
+  @PrimaryColumn("uuid", { default: () => "gen_random_uuid()" })
   id!: string;
 
   @CreateDateColumn({
