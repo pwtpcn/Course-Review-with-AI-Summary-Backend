@@ -1,4 +1,4 @@
-import { dataSource } from "../data-source";
+import { dataSource } from "../lib/data-source";
 import { DataSource } from "typeorm";
 import { Report } from "../schema/report";
 import { CreateReportInput } from "../dto/report.dto";
@@ -42,12 +42,16 @@ export class ReportService {
   }
 
   async getReportByReviewId(reviewId: string) {
-    const reports = await this.dataSource.manager.find(Report, { where: { reviewId } });
+    const reports = await this.dataSource.manager.find(Report, {
+      where: { reviewId },
+    });
     return reports;
   }
 
   async getReportByUserId(userId: string) {
-    const reports = await this.dataSource.manager.find(Report, { where: { userId } });
+    const reports = await this.dataSource.manager.find(Report, {
+      where: { userId },
+    });
     return reports;
   }
 

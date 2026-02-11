@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { ReportService } from "../service/report_services";
 import type { CreateReportInput } from "../dto/report.dto";
+import { authMiddleware } from "../middleware/auth";
 
 const reportService = new ReportService();
 
@@ -8,12 +9,20 @@ export const reportController = new Elysia({
   prefix: "/reports",
   detail: { tags: ["Report"] },
 })
+  .use(authMiddleware)
 
   .post(
     "/create",
-    async ({ body, set }) => {
+    async ({ body, set, user }) => {
+      if (!user) {
+        set.status = 401;
+        return { error: "Unauthorized" };
+      }
       try {
-        const report = await reportService.createReport(body);
+        const report = await reportService.createReport({
+          ...body,
+          userId: user.id,
+        });
         set.status = 201;
         return { message: "Report created successfully", report };
       } catch (e: any) {
@@ -24,7 +33,7 @@ export const reportController = new Elysia({
     {
       body: t.Object({
         content: t.String(),
-        userId: t.String(),
+        // userId: t.String(), // Removed
         reviewId: t.String(),
       }),
       detail: {
@@ -36,7 +45,7 @@ export const reportController = new Elysia({
 
   .get(
     "/getall",
-    async ({ query: {sortBy}, set }) => {
+    async ({ query: { sortBy }, set }) => {
       try {
         const reports = await reportService.getAllReports(sortBy);
         set.status = 200;
@@ -129,65 +138,98 @@ export const reportController = new Elysia({
     },
   )
 
-  .patch("/cancel/:id", async ({ params: {id}, set }) => {
-    try {
-      const report = await reportService.cancelReport(id);
-      set.status = 200;
-      return { message: "Report canceled successfully", report };
-    } catch (e: any) {
-      if (e.message === "Report not found") {
-        set.status = 404;
-        return { error: e.message };
+  .patch(
+    "/cancel/:id",
+    async ({ params: { id }, set, user }) => {
+      if (!user) {
+        set.status = 401;
+        return { error: "Unauthorized" };
       }
-      set.status = 500;
-      return { error: e.message };
-    }
-  },
-  {
-    detail: {
-      description: "Cancel a report",
-      summary: "Cancel a report",
-    },
-  })
+      try {
+        // Check ownership
+        const report = await reportService.getReportByIdOrThrow(id);
+        if (report.user.id !== user.id && user.role !== "admin") {
+          set.status = 403;
+          return { error: "Forbidden" };
+        }
 
-  .patch("/approve/:id", async ({ params: {id}, set }) => {
-    try {
-      const report = await reportService.approveReport(id);
-      set.status = 200;
-      return { message: "Report approved successfully", report };
-    } catch (e: any) {
-      if (e.message === "Report not found") {
-        set.status = 404;
+        const canceledReport = await reportService.cancelReport(id);
+        set.status = 200;
+        return {
+          message: "Report canceled successfully",
+          report: canceledReport,
+        };
+      } catch (e: any) {
+        if (e.message === "Report not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
         return { error: e.message };
       }
-      set.status = 500;
-      return { error: e.message };
-    }
-  },
-  {
-    detail: {
-      description: "Approve a report",
-      summary: "Approve a report",
     },
-  })
+    {
+      detail: {
+        description: "Cancel a report",
+        summary: "Cancel a report",
+      },
+    },
+  )
 
-  .delete("/delete/:id", async ({ params: {id}, set }) => {
-    try {
-      const deletedReport = await reportService.deleteReport(id);
-      set.status = 200;
-      return { message: "Report deleted successfully", deletedReport };
-    } catch (e: any) {
-      if (e.message === "Report not found") {
-        set.status = 404;
+  .patch(
+    "/approve/:id",
+    async ({ params: { id }, set, user }) => {
+      // Admin only
+      if (user?.role !== "admin") {
+        set.status = 403;
+        return { error: "Forbidden" };
+      }
+      try {
+        const report = await reportService.approveReport(id);
+        set.status = 200;
+        return { message: "Report approved successfully", report };
+      } catch (e: any) {
+        if (e.message === "Report not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
         return { error: e.message };
       }
-      set.status = 500;
-      return { error: e.message };
-    }
-  },
-  {
-    detail: {
-      description: "Delete a report",
-      summary: "Delete a report",
     },
-  })
+    {
+      detail: {
+        description: "Approve a report",
+        summary: "Approve a report",
+      },
+    },
+  )
+
+  .delete(
+    "/delete/:id",
+    async ({ params: { id }, set, user }) => {
+      // Admin only
+      if (user?.role !== "admin") {
+        set.status = 403;
+        return { error: "Forbidden" };
+      }
+      try {
+        const deletedReport = await reportService.deleteReport(id);
+        set.status = 200;
+        return { message: "Report deleted successfully", deletedReport };
+      } catch (e: any) {
+        if (e.message === "Report not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
+        return { error: e.message };
+      }
+    },
+    {
+      detail: {
+        description: "Delete a report",
+        summary: "Delete a report",
+      },
+    },
+  );

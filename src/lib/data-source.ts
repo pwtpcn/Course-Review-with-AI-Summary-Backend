@@ -1,10 +1,10 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
-import { User } from "./schema/user";
-import { Course } from "./schema/course";
-import { Review } from "./schema/review";
-import { Job } from "./schema/job";
-import { Report } from "./schema/report";
+import { User } from "../schema/user";
+import { Course } from "../schema/course";
+import { Review } from "../schema/review";
+import { Job } from "../schema/job";
+import { Report } from "../schema/report";
 
 export const dataSource = new DataSource({
   type: "postgres",

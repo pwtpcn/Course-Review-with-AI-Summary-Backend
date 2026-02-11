@@ -1,5 +1,5 @@
 import { Course } from "../schema/course";
-import { dataSource } from "../data-source";
+import { dataSource } from "../lib/data-source";
 import { DataSource } from "typeorm";
 import { CreateCourseInput, UpdateCourseInput } from "../dto/course.dto";
 

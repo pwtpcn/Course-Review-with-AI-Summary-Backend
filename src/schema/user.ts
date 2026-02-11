@@ -11,16 +11,11 @@ export class User extends Metadata {
   @Column({ unique: true })
   username!: string;
 
-  @Column()
-  hashedPassword!: string;
-
-  @Column()
-  salt!: string;
-
-  @Column({ 
+  @Column({
     type: "enum",
     enum: ["user", "admin"],
-    default: "user" })
+    default: "user",
+  })
   role!: "user" | "admin";
 
   @OneToMany(() => Review, (review) => review.user)

@@ -1,5 +1,5 @@
 import { Job } from "../schema/job";
-import { dataSource } from "../data-source";
+import { dataSource } from "../lib/data-source";
 import { DataSource } from "typeorm";
 import { CreateJobInput, UpdateJobInput } from "../dto/job.dto";
 

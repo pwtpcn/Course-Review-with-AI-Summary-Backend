@@ -1,5 +1,6 @@
 import Elysia, { t } from "elysia";
 import { ReviewServices } from "../service/review_services";
+import { authMiddleware } from "../middleware/auth";
 
 const service = new ReviewServices();
 
@@ -7,12 +8,17 @@ export const reviewController = new Elysia({
   prefix: "/review",
   detail: { tags: ["Review"] },
 })
+  .use(authMiddleware)
 
   .post(
     "/create",
-    async ({ body, set }) => {
+    async ({ body, set, user }) => {
+      if (!user) {
+        set.status = 401;
+        return { error: "Unauthorized" };
+      }
       try {
-        const review = await service.createReview(body);
+        const review = await service.createReview({ ...body, userId: user.id });
         set.status = 201;
         return { message: "Review created successfully", review };
       } catch (e: any) {
@@ -22,7 +28,7 @@ export const reviewController = new Elysia({
     },
     {
       body: t.Object({
-        userId: t.String(),
+        // userId: t.String(), // Removed, getting from Auth
         courseId: t.String(),
         content: t.String(),
         pros: t.String(),
@@ -116,11 +122,7 @@ export const reviewController = new Elysia({
     async ({ params: { id }, query: { sortBy, includeHidden }, set }) => {
       try {
         const isHidden = includeHidden === "true";
-        const reviews = await service.getReviewByCourseId(
-          id,
-          sortBy,
-          isHidden,
-        );
+        const reviews = await service.getReviewByCourseId(id, sortBy, isHidden);
         set.status = 200;
         return { message: "Reviews fetched successfully", reviews };
       } catch (e: any) {
@@ -142,8 +144,19 @@ export const reviewController = new Elysia({
 
   .put(
     "/update/:id",
-    async ({ params: { id }, body, set }) => {
+    async ({ params: { id }, body, set, user }) => {
+      if (!user) {
+        set.status = 401;
+        return { error: "Unauthorized" };
+      }
       try {
+        // Fetch review to check ownership
+        const existingReview = await service.getReviewByIdOrThrow(id);
+        if (existingReview.userId !== user.id && user.role !== "admin") {
+          set.status = 403;
+          return { error: "Forbidden" };
+        }
+
         const updatedReview = await service.updateReview(id, body);
         set.status = 200;
         return {
@@ -164,10 +177,10 @@ export const reviewController = new Elysia({
         id: t.String(),
       }),
       body: t.Object({
-        content: t.String(),
-        pros: t.String(),
+        content: t.Optional(t.String()),
+        pros: t.Optional(t.String()),
         cons: t.Optional(t.String()),
-        rating: t.Number(),
+        rating: t.Optional(t.Number()),
         job: t.Optional(t.String()),
       }),
       detail: {
@@ -179,8 +192,19 @@ export const reviewController = new Elysia({
 
   .delete(
     "/delete/:id",
-    async ({ params: { id }, set }) => {
+    async ({ params: { id }, set, user }) => {
+      if (!user) {
+        set.status = 401;
+        return { error: "Unauthorized" };
+      }
       try {
+        // Fetch review to check ownership
+        const existingReview = await service.getReviewByIdOrThrow(id);
+        if (existingReview.user.id !== user.id && user.role !== "admin") {
+          set.status = 403;
+          return { error: "Forbidden" };
+        }
+
         const deletedReview = await service.deleteReview(id);
         set.status = 200;
         return { message: "Review deleted successfully", deletedReview };

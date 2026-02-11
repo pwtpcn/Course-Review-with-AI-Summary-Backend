@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { dataSource } from "./data-source";
+import { dataSource } from "./lib/data-source";
 import { userController } from "./controller/user_controllers";
 import { courseController } from "./controller/course_controllers";
 import { reviewController } from "./controller/review_controllers";

@@ -1,5 +1,5 @@
 import { DataSource } from "typeorm";
-import { dataSource } from "../data-source";
+import { dataSource } from "../lib/data-source";
 import { Review } from "../schema/review";
 import { CreateReviewInput, UpdateReviewInput } from "../dto/review.dto";
 

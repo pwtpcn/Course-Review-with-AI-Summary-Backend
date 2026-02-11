@@ -9,12 +9,11 @@ import {
 import { MetadataWithoutId } from "./common/metadata_without_id";
 import { Job } from "./job";
 import { Review } from "./review";
-// import { Teacher } from "./teacher";
 
 @Entity()
 export class Course extends MetadataWithoutId {
   @PrimaryColumn()
-  courseId!: string;
+  id!: string;
 
   @Column()
   nameTh!: string;
