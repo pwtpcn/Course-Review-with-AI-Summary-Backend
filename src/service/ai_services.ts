@@ -19,7 +19,8 @@ export class AiService {
 
   constructor() {
     this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-    this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    // this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    this.model = this.genAI.getGenerativeModel({ model: "gemini-3-pro-preview" });
     this.embeddingModel = this.genAI.getGenerativeModel({
       model: "gemini-embedding-001",
     });
@@ -141,17 +142,9 @@ export class AiService {
   }
 
   async summarizeReviews(courseId: string) {
-    // 1. Fetch reviews from DB or Qdrant? DB is better for "all reviews of this course".
-    // Qdrant is good for "reviews about X".
-    // Let's use DB to get all reviews for the course, then summarize.
-    // OR better: Use Qdrant to find "most relevant reviews" if we want to answer a question.
-    // But for general summary, DB fetch might be safer if not too many.
-
-    // Let's implement RAG-style summary: "Summarize what students say about this course"
-
     const reviews = await this.reviewRepo.find({
       where: { courseId: courseId },
-      take: 20, // Limit to 20 recent reviews to fit context
+      take: 20,
     });
 
     if (reviews.length === 0) return "No reviews found.";
@@ -160,6 +153,59 @@ export class AiService {
       .map((r) => `- ${r.content} (Pros: ${r.pros}, Cons: ${r.cons})`)
       .join("\n");
     const prompt = `Summarize the following student reviews for the course. Highlight pros and cons:\n\n${reviewsText}`;
+
+    return await this.generateText(prompt);
+  }
+
+  async summarizeReviewsFromQdrant(courseId: string) {
+    const numberOfReview = 10;
+    const searchResult = await client.scroll(QDRANT_COLLECTIONS.REVIEWS, {
+      filter: {
+        must: [
+          {
+            key: "courseId",
+            match: {
+              value: courseId,
+            },
+          },
+        ],
+      },
+      limit: numberOfReview,
+      with_payload: true,
+    });
+
+    const points = searchResult.points;
+
+    if (points.length === 0) return "No reviews found in Qdrant.";
+
+    const reviewContext = points
+      .map(
+        (res, index) => `รีวิวที่ ${index + 1}: ${JSON.stringify(res.payload)}`,
+      )
+      .join("\n");
+
+    const course = await this.courseRepo.findOne({
+      where: { id: courseId },
+    });
+    const prompt = `
+    คุณคือผู้เชี่ยวชาญด้านการวิเคราะห์ข้อมูลทางการศึกษาและ AI Assistant สำหรับนิสิตมหาวิทยาลัย
+    ภารกิจ: จงสรุปรีวิวจากนักศึกษาจำนวน ${numberOfReview} รายการต่อไปนี้ ของรายวิชา ${course?.nameTh}
+    
+    ข้อกำหนด:  
+    - ตอบเป็นภาษาไทย
+    - **content**: ให้สรุปภาพรวมจาก field "content" ของรีวิว
+    - **pros**: ให้สรุปจุดเด่นจาก field "pros" (ถ้าไม่มีให้วิเคราะห์จาก content)
+    - **cons**: ให้สรุปจุดควรระวังจาก field "cons" (ถ้าไม่มีให้วิเคราะห์จาก content)
+    - คืนค่าเป็น JSON เท่านั้นตามโครงสร้างนี้:
+    {
+      "content": "เนื้อหาสรุปแบบภาพรวม",
+      "pros": ["จุดเด่นที่ 1", "จุดเด่นที่ 2"],
+      "cons": ["จุดควรระวังที่ 1", "จุดควรระวังที่ 2"]
+    }
+
+    รีวิวที่ใช้สรุป:
+    ${reviewContext}
+    `;
 
     return await this.generateText(prompt);
   }

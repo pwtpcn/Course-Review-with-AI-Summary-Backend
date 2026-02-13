@@ -33,7 +33,7 @@ export const courseController = new Elysia({
     },
     {
       body: t.Object({
-        courseId: t.String({ minLength: 8, maxLength: 8 }),
+        id: t.String({ minLength: 8, maxLength: 8 }),
         nameTh: t.String({ minLength: 1, maxLength: 255 }),
         nameEn: t.String({ minLength: 1, maxLength: 255 }),
         description: t.String({ minLength: 1, maxLength: 255 }),

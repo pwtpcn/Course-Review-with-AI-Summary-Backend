@@ -32,6 +32,17 @@ export async function initQdrantCollections() {
         console.log(`Collection already exists: ${name}`);
       }
     }
+
+    // Set payload index for reviews.courseId for filter
+    try {
+      await client.createPayloadIndex(QDRANT_COLLECTIONS.REVIEWS, {
+        field_name: "courseId",
+        field_schema: "keyword",
+      });
+      console.log("Payload index ensured for reviews.courseId");
+    } catch (err: any) {
+      console.log(`Note on index creation: ${err.message}`);
+    }
   } catch (err) {
     console.error("Error initializing Qdrant collections:", err);
   }
