@@ -11,13 +11,13 @@ export class CourseServices {
   }
 
   async createCourse(courseData: CreateCourseInput) {
-    const existsCourse = await this.getCourseById(courseData.courseId);
+    const existsCourse = await this.getCourseById(courseData.id);
     if (existsCourse) {
       throw new Error("Course already exists");
     }
 
     const course = new Course();
-    course.courseId = courseData.courseId;
+    course.id = courseData.id;
     course.nameTh = courseData.nameTh;
     course.nameEn = courseData.nameEn;
     course.description = courseData.description;
@@ -38,7 +38,7 @@ export class CourseServices {
   }
 
   async getCourseById(id: string) {
-    return this.dataSource.manager.findOne(Course, { where: { courseId: id } });
+    return this.dataSource.manager.findOne(Course, { where: { id } });
   }
 
   async getCourseByIdOrThrow(id: string) {

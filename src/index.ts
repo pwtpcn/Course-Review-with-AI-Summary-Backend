@@ -5,9 +5,12 @@ import { courseController } from "./controller/course_controllers";
 import { reviewController } from "./controller/review_controllers";
 import { jobController } from "./controller/job_controllers";
 import { reportController } from "./controller/report_controllers";
+import { aiController } from "./controller/ai_controllers";
 import { swagger } from "@elysiajs/swagger";
+import { initQdrantCollections } from "./lib/qdrant";
 
 await dataSource.initialize();
+await initQdrantCollections();
 
 const app = new Elysia()
   .use(swagger())
@@ -16,6 +19,7 @@ const app = new Elysia()
   .use(reviewController)
   .use(jobController)
   .use(reportController)
+  .use(aiController)
   .listen(3000);
 
 console.log(

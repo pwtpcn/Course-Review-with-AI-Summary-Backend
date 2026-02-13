@@ -36,8 +36,4 @@ export class Course extends MetadataWithoutId {
 
   @OneToMany(() => Review, (review) => review.course)
   reviews!: Review[];
-
-  // @JoinTable({ name: "teacher_courses" })
-  // @ManyToMany(() => Teacher, (teacher) => teacher.courses)
-  // teachers!: Teacher[];
 }

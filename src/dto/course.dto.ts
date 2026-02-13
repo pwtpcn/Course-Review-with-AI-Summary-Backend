@@ -1,5 +1,5 @@
 export interface CreateCourseInput {
-  courseId: string;
+  id: string;
   nameTh: string;
   nameEn: string;
   description: string;
