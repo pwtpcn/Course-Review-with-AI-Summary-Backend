@@ -33,6 +33,7 @@ export class Course extends MetadataWithoutId {
   @Column({
     type: "enum",
     enum: ["Core", "Elective"],
+    default: "Core",
   })
   category!: "Core" | "Elective";
 
