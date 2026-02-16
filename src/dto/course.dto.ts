@@ -5,6 +5,7 @@ export interface CreateCourseInput {
   description: string;
   credits: number;
   year: number;
+  category: "Core" | "Elective";
 }
 
 export interface UpdateCourseInput {
@@ -13,4 +14,5 @@ export interface UpdateCourseInput {
   description?: string;
   credits?: number;
   year?: number;
+  category?: "Core" | "Elective";
 }

@@ -30,6 +30,12 @@ export class Course extends MetadataWithoutId {
   @Column()
   year!: number;
 
+  @Column({
+    type: "enum",
+    enum: ["Core", "Elective"],
+  })
+  category!: "Core" | "Elective";
+
   @JoinTable({ name: "course_jobs" })
   @ManyToMany(() => Job, (job) => job.courses)
   jobs!: Job[];

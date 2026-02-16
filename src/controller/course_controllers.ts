@@ -39,6 +39,7 @@ export const courseController = new Elysia({
         description: t.String({ minLength: 1, maxLength: 255 }),
         credits: t.Number({ min: 1, max: 6 }),
         year: t.Number({ min: 1, max: 4 }),
+        category: t.Union([t.Literal("Core"), t.Literal("Elective")]),
       }),
       detail: {
         description: "Create a new course",
@@ -128,6 +129,7 @@ export const courseController = new Elysia({
         description: t.Optional(t.String()),
         credits: t.Optional(t.Number()),
         year: t.Optional(t.Number()),
+        category: t.Optional(t.Union([t.Literal("Core"), t.Literal("Elective")])),
       }),
       detail: {
         description: "Update a course",
