@@ -5,7 +5,7 @@ export interface CreateReviewInput {
     pros: string;
     cons?: string;
     rating: number;
-    job?: string;
+    testPrepare?: string;
 }
 
 export interface UpdateReviewInput {
@@ -13,5 +13,5 @@ export interface UpdateReviewInput {
     pros?: string;
     cons?: string;
     rating?: number;
-    job?: string;
+    testPrepare?: string;
 }

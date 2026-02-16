@@ -28,13 +28,12 @@ export const reviewController = new Elysia({
     },
     {
       body: t.Object({
-        // userId: t.String(), // Removed, getting from Auth
         courseId: t.String(),
         content: t.String(),
         pros: t.String(),
         cons: t.Optional(t.String()),
         rating: t.Number(),
-        job: t.Optional(t.String()),
+        testPrepare: t.Optional(t.String()),
       }),
       detail: {
         description: "Create a new review",
@@ -181,7 +180,7 @@ export const reviewController = new Elysia({
         pros: t.Optional(t.String()),
         cons: t.Optional(t.String()),
         rating: t.Optional(t.Number()),
-        job: t.Optional(t.String()),
+        testPrepare: t.Optional(t.String()),
       }),
       detail: {
         description: "Update a review",

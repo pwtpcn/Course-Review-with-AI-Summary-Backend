@@ -36,7 +36,7 @@ export class Review extends Metadata {
   rating!: number;
 
   @Column({ nullable: true })
-  job?: string;
+  testPrepare?: string;
 
   @Column({ default: 0 })
   like!: number;

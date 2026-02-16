@@ -18,7 +18,7 @@ export class ReviewServices {
     review.pros = reviewData.pros!;
     review.cons = reviewData.cons;
     review.rating = reviewData.rating!;
-    review.job = reviewData.job;
+    review.testPrepare = reviewData.testPrepare;
 
     return this.dataSource.manager.save(Review, review);
   }
