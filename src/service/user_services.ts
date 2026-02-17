@@ -9,21 +9,22 @@ class UserServices {
     this.dataSource = dataSource;
   }
 
-  // Sync user from Supabase to local DB
   async syncUser(supabaseUser: SupabaseUser) {
     const { id, email, user_metadata } = supabaseUser;
 
-    // Check if user already exists
     let user = await this.getUserById(id);
 
     if (!user) {
-      // Create new user
       user = new User();
       user.id = id;
       user.email = email!;
+      
       // Use logic to determine username (e.g. from metadata or email)
       user.username =
-        user_metadata?.name || email?.split("@")[0] || "user_" + id.slice(0, 8);
+        user_metadata?.username ||
+        user_metadata?.name ||
+        email?.split("@")[0] ||
+        "user_" + id.slice(0, 8);
       user.role = "user"; // Default role
       await this.dataSource.manager.save(user);
     } else {
@@ -39,6 +40,30 @@ class UserServices {
 
   async getUserByIdOrThrow(id: string) {
     const user = await this.getUserById(id);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    return user;
+  }
+
+  async getUserByEmail(email: string) {
+    return this.dataSource.manager.findOne(User, { where: { email } });
+  }
+
+  async getUserByEmailOrThrow(email: string) {
+    const user = await this.getUserByEmail(email);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    return user;
+  }
+
+  async getUserByUsername(username: string) {
+    return this.dataSource.manager.findOne(User, { where: { username } });
+  }
+
+  async getUserByUsernameOrThrow(username: string) {
+    const user = await this.getUserByUsername(username);
     if (!user) {
       throw new Error("User not found");
     }
