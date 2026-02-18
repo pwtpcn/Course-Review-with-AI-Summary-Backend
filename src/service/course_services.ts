@@ -27,14 +27,36 @@ export class CourseServices {
     return this.dataSource.manager.save(Course, course);
   }
 
-  async getAllCourses(sortBy?: "newest" | "oldest") {
-    const order: any = {};
-    if (sortBy === "newest") {
-      order.createdAt = "DESC";
-    } else if (sortBy === "oldest") {
-      order.createdAt = "ASC";
+  async getAllCourses(
+    sortBy?: "newest" | "oldest",
+    category?: "Core" | "Elective",
+    year?: number,
+    search?: string,
+  ) {
+    const query = this.dataSource.manager.createQueryBuilder(Course, "course");
+
+    if (category) {
+      query.andWhere("course.category = :category", { category });
     }
-    return this.dataSource.manager.find(Course, { order });
+
+    if (year) {
+      query.andWhere("course.year = :year", { year });
+    }
+
+    if (search) {
+      query.andWhere(
+        "(course.nameTh LIKE :search OR course.nameEn LIKE :search OR course.id LIKE :search)",
+        { search: `%${search}%` },
+      );
+    }
+
+    if (sortBy === "newest") {
+      query.orderBy("course.createdAt", "DESC");
+    } else if (sortBy === "oldest") {
+      query.orderBy("course.createdAt", "ASC");
+    }
+
+    return query.getMany();
   }
 
   async getCourseById(id: string) {

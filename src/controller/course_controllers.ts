@@ -50,9 +50,15 @@ export const courseController = new Elysia({
 
   .get(
     "/getall",
-    async ({ query: { sortBy }, set }) => {
+    async ({ query: { sortBy, category, year, search }, set }) => {
       try {
-        const courses = await service.getAllCourses(sortBy);
+        const yearNum = year ? parseInt(year) : undefined;
+        const courses = await service.getAllCourses(
+          sortBy,
+          category,
+          yearNum,
+          search,
+        );
         set.status = 200;
         return { message: "Courses fetched successfully", courses };
       } catch (e: any) {
@@ -63,6 +69,11 @@ export const courseController = new Elysia({
     {
       query: t.Object({
         sortBy: t.Optional(t.Union([t.Literal("newest"), t.Literal("oldest")])),
+        category: t.Optional(
+          t.Union([t.Literal("Core"), t.Literal("Elective")]),
+        ),
+        year: t.Optional(t.String()),
+        search: t.Optional(t.String()),
       }),
       detail: {
         description: "Get all courses",
@@ -129,7 +140,9 @@ export const courseController = new Elysia({
         description: t.Optional(t.String()),
         credits: t.Optional(t.Number()),
         year: t.Optional(t.Number()),
-        category: t.Optional(t.Union([t.Literal("Core"), t.Literal("Elective")])),
+        category: t.Optional(
+          t.Union([t.Literal("Core"), t.Literal("Elective")]),
+        ),
       }),
       detail: {
         description: "Update a course",
