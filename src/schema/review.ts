@@ -29,13 +29,13 @@ export class Review extends Metadata {
   @Column()
   pros!: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, default: "-" })
   cons?: string;
 
   @Column()
   rating!: number;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, default: "-" })
   testPrepare?: string;
 
   @Column({ default: 0 })
