@@ -33,13 +33,19 @@ export async function initQdrantCollections() {
       }
     }
 
-    // Set payload index for reviews.courseId for filter
+    // Set payload
     try {
       await client.createPayloadIndex(QDRANT_COLLECTIONS.REVIEWS, {
         field_name: "courseId",
         field_schema: "keyword",
       });
       console.log("Payload index ensured for reviews.courseId");
+
+      await client.createPayloadIndex(QDRANT_COLLECTIONS.REVIEWS, {
+        field_name: "rating",
+        field_schema: "integer",
+      });
+      console.log("Payload index ensured for reviews.rating");
     } catch (err: any) {
       console.log(`Note on index creation: ${err.message}`);
     }

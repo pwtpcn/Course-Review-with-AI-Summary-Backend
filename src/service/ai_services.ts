@@ -6,6 +6,7 @@ import { Course } from "../schema/course";
 import { Job } from "../schema/job";
 import { Review } from "../schema/review";
 import { v5 as uuidv5 } from "uuid";
+import { calculateMeanVector } from "../util/calculateMeanVector";
 
 // Namespace for generating deterministic UUIDs from string IDs
 const NAMESPACE = "6ba7b810-9dad-11d1-80b4-00c04fd430c8"; // Standard DNS namespace
@@ -119,6 +120,7 @@ export class AiService {
           rating: review.rating,
           pros: review.pros,
           cons: review.cons,
+          testPrepare: review.testPrepare,
         },
       });
     }
@@ -203,6 +205,7 @@ export class AiService {
             rating: review.rating,
             pros: review.pros,
             cons: review.cons,
+            testPrepare: review.testPrepare,
           },
         },
       ],
@@ -222,22 +225,6 @@ export class AiService {
     return searchResult;
   }
 
-  async summarizeReviews(courseId: string) {
-    const reviews = await this.reviewRepo.find({
-      where: { courseId: courseId },
-      take: 20,
-    });
-
-    if (reviews.length === 0) return "No reviews found.";
-
-    const reviewsText = reviews
-      .map((r) => `- ${r.content} (Pros: ${r.pros}, Cons: ${r.cons})`)
-      .join("\n");
-    const prompt = `Summarize the following student reviews for the course. Highlight pros and cons:\n\n${reviewsText}`;
-
-    return await this.generateText(prompt);
-  }
-
   async summarizeReviewsFromQdrant(courseId: string) {
     //Check cache
     const cacheKey = `course_summary:${courseId}`;
@@ -251,28 +238,86 @@ export class AiService {
       console.error("Redis get error", err);
     }
 
-    //Get reviews from Qdrant
-    const numberOfReview = 10;
-    const searchResult = await client.scroll(QDRANT_COLLECTIONS.REVIEWS, {
+    // Get reviews from Qdrant
+    const numberOfReview = 24;
+
+    // Latest Review
+    const recentSearchResult = await client.scroll(QDRANT_COLLECTIONS.REVIEWS, {
       filter: {
-        must: [
-          {
-            key: "courseId",
-            match: {
-              value: courseId,
-            },
-          },
-        ],
+        must: [{ key: "courseId", match: { value: courseId } }],
       },
-      limit: numberOfReview,
+      limit: 8,
       with_payload: true,
     });
+    const recentPoints = recentSearchResult.points;
 
-    const points = searchResult.points;
+    // Get Vector for calculate Mean Vector
+    const allSearchResult = await client.scroll(QDRANT_COLLECTIONS.REVIEWS, {
+      filter: {
+        must: [{ key: "courseId", match: { value: courseId } }],
+      },
+      limit: 100,
+      with_payload: true,
+      with_vector: true,
+    });
+    const allPoints = allSearchResult.points;
 
-    if (points.length === 0) return "No reviews found in Qdrant.";
+    console.log("All points:", allPoints.length);
 
-    const reviewContext = points
+    if (allPoints.length === 0) return "No reviews found in Qdrant.";
+
+    // Separate by Sentiment (Rating)
+    const positivePoints = allPoints.filter(
+      (p) => (p.payload as any).rating >= 4,
+    );
+    const negativePoints = allPoints.filter(
+      (p) => (p.payload as any).rating <= 3,
+    );
+
+    const selectedReviews: any[] = [...recentPoints];
+
+    // Positive Review
+    if (positivePoints.length > 0) {
+      const positiveVectors = positivePoints.map((p) => p.vector as number[]);
+      const positiveMean = calculateMeanVector(positiveVectors);
+      const posSearchResult = await client.search(QDRANT_COLLECTIONS.REVIEWS, {
+        vector: positiveMean,
+        filter: {
+          must: [
+            { key: "courseId", match: { value: courseId } },
+            { key: "rating", range: { gte: 4 } },
+          ],
+        },
+        limit: 8,
+        with_payload: true,
+      });
+      selectedReviews.push(...posSearchResult);
+    }
+
+    // Negative Review
+    if (negativePoints.length > 0) {
+      const negativeVectors = negativePoints.map((p) => p.vector as number[]);
+      const negativeMean = calculateMeanVector(negativeVectors);
+      const negSearchResult = await client.search(QDRANT_COLLECTIONS.REVIEWS, {
+        vector: negativeMean,
+        filter: {
+          must: [
+            { key: "courseId", match: { value: courseId } },
+            { key: "rating", range: { lte: 3 } },
+          ],
+        },
+        limit: 8,
+        with_payload: true,
+      });
+      selectedReviews.push(...negSearchResult);
+    }
+
+    // Deduplicate
+    const uniqueReviews = Array.from(
+      new Map(selectedReviews.map((r) => [r.id, r])).values(),
+    ).slice(0, numberOfReview);
+
+    const reviewContext = uniqueReviews
       .map(
         (res, index) => `รีวิวที่ ${index + 1}: ${JSON.stringify(res.payload)}`,
       )

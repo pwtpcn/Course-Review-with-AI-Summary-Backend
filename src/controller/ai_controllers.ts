@@ -16,6 +16,7 @@ export const aiController = new Elysia({
         const jobs = await aiService.syncJobs();
         const reviews = await aiService.syncReviews();
         set.status = 200;
+        console.log("Sync completed.");
         return {
           success: true,
           synced: {
@@ -55,29 +56,6 @@ export const aiController = new Elysia({
       }),
       detail: {
         summary: "Recommend courses based on job description",
-        tags: ["AI"],
-      },
-    },
-  )
-
-  .get(
-    "/reviews/:courseId/summary",
-    async ({ params, set }) => {
-      try {
-        const summary = await aiService.summarizeReviews(params.courseId);
-        set.status = 200;
-        return { summary };
-      } catch (e: any) {
-        set.status = 500;
-        return { error: e.message };
-      }
-    },
-    {
-      params: t.Object({
-        courseId: t.String(),
-      }),
-      detail: {
-        summary: "Summarize reviews for a course (Database)",
         tags: ["AI"],
       },
     },
