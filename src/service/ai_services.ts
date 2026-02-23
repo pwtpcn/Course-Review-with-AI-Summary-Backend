@@ -20,7 +20,9 @@ export class AiService {
   constructor() {
     this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
     // this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    this.model = this.genAI.getGenerativeModel({ model: "gemini-3-pro-preview" });
+    this.model = this.genAI.getGenerativeModel({
+      model: "gemini-3-pro-preview",
+    });
     this.embeddingModel = this.genAI.getGenerativeModel({
       model: "gemini-embedding-001",
     });
@@ -127,6 +129,84 @@ export class AiService {
       });
     }
     return { count: points.length };
+  }
+
+  async syncCourse(courseId: string) {
+    const course = await this.courseRepo.findOne({ where: { id: courseId } });
+    if (!course) return null;
+
+    const textToEmbed = `Course: ${course.nameEn} (${course.nameTh})\nDescription: ${course.description}`;
+    const embedding = await this.getEmbedding(textToEmbed);
+
+    await client.upsert(QDRANT_COLLECTIONS.COURSES, {
+      wait: true,
+      points: [
+        {
+          id: uuidv5(course.id, NAMESPACE),
+          vector: embedding,
+          payload: {
+            originalId: course.id,
+            nameEn: course.nameEn,
+            nameTh: course.nameTh,
+            description: course.description,
+            credits: course.credits,
+          },
+        },
+      ],
+    });
+    return true;
+  }
+
+  async syncJob(jobId: string) {
+    const job = await this.jobRepo.findOne({ where: { id: jobId } });
+    if (!job) return null;
+
+    const textToEmbed = `Job: ${job.name}\nDetails: ${job.details}`;
+    const embedding = await this.getEmbedding(textToEmbed);
+
+    await client.upsert(QDRANT_COLLECTIONS.JOBS, {
+      wait: true,
+      points: [
+        {
+          id: job.id,
+          vector: embedding,
+          payload: {
+            name: job.name,
+            details: job.details,
+          },
+        },
+      ],
+    });
+    return true;
+  }
+
+  async syncReview(reviewId: string) {
+    const review = await this.reviewRepo.findOne({
+      where: { id: reviewId },
+      relations: ["course"],
+    });
+    if (!review) return null;
+
+    const textToEmbed = `Course: ${review.course?.nameEn}\nReview: ${review.content}\nPros: ${review.pros}\nCons: ${review.cons || "-"}`;
+    const embedding = await this.getEmbedding(textToEmbed);
+
+    await client.upsert(QDRANT_COLLECTIONS.REVIEWS, {
+      wait: true,
+      points: [
+        {
+          id: review.id,
+          vector: embedding,
+          payload: {
+            courseId: review.courseId,
+            content: review.content,
+            rating: review.rating,
+            pros: review.pros,
+            cons: review.cons,
+          },
+        },
+      ],
+    });
+    return true;
   }
 
   // --- Search/Recommendation Functions ---

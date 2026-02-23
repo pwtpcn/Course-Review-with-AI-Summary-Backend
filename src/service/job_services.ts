@@ -44,7 +44,7 @@ export class JobServices {
     const job = await this.getJobByIdOrThrow(id);
 
     Object.assign(job, jobData);
-    return await this.dataSource.manager.save(job);
+    return this.dataSource.manager.save(job);
   }
 
   async deleteJob(id: string) {

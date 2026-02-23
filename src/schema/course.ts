@@ -37,9 +37,9 @@ export class Course extends MetadataWithoutId {
   })
   category!: "Core" | "Elective";
 
-  @JoinTable({ name: "course_jobs" })
-  @ManyToMany(() => Job, (job) => job.courses)
-  jobs!: Job[];
+  // @JoinTable({ name: "course_jobs" })
+  // @ManyToMany(() => Job, (job) => job.courses)
+  // jobs!: Job[];
 
   @OneToMany(() => Review, (review) => review.course)
   reviews!: Review[];

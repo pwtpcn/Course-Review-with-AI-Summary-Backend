@@ -10,7 +10,7 @@ export class Job extends Metadata {
   @Column()
   details!: string;
 
-  @JoinTable({ name: "course_jobs" })
-  @ManyToMany(() => Course, (course) => course.jobs)
-  courses!: Course[];
+  // @JoinTable({ name: "course_jobs" })
+  // @ManyToMany(() => Course, (course) => course.jobs)
+  // courses!: Course[];
 }
