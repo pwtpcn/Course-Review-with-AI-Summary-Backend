@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { client, QDRANT_COLLECTIONS } from "../lib/qdrant";
 import { dataSource } from "../lib/data-source";
+import { redis } from "../lib/redis";
 import { Course } from "../schema/course";
 import { Job } from "../schema/job";
 import { Review } from "../schema/review";
@@ -238,6 +239,19 @@ export class AiService {
   }
 
   async summarizeReviewsFromQdrant(courseId: string) {
+    //Check cache
+    const cacheKey = `course_summary:${courseId}`;
+    try {
+      const cachedSummary = await redis.get(cacheKey);
+      if (cachedSummary) {
+        console.log(`[Cache Hit] Summary for course ${courseId}`);
+        return cachedSummary;
+      }
+    } catch (err) {
+      console.error("Redis get error", err);
+    }
+
+    //Get reviews from Qdrant
     const numberOfReview = 10;
     const searchResult = await client.scroll(QDRANT_COLLECTIONS.REVIEWS, {
       filter: {
@@ -264,6 +278,8 @@ export class AiService {
       )
       .join("\n");
 
+    console.log("Review Context: ", reviewContext);
+
     const course = await this.courseRepo.findOne({
       where: { id: courseId },
     });
@@ -276,17 +292,30 @@ export class AiService {
     - **content**: ให้สรุปภาพรวมจาก field "content" ของรีวิว
     - **pros**: ให้สรุปจุดเด่นจาก field "pros" (ถ้าไม่มีให้วิเคราะห์จาก content)
     - **cons**: ให้สรุปจุดควรระวังจาก field "cons" (ถ้าไม่มีให้วิเคราะห์จาก content)
+    - **testPrepare**: ให้สรุปวิธีการเตรียมตัวสอบจาก field "testPrepare" (ถ้าไม่มีให้วิเคราะห์จาก content)
+    - **rating**: ให้สรุปคะแนนเฉลี่ยจาก field "rating"
     - คืนค่าเป็น JSON เท่านั้นตามโครงสร้างนี้:
     {
       "content": "เนื้อหาสรุปแบบภาพรวม",
       "pros": ["จุดเด่นที่ 1", "จุดเด่นที่ 2"],
-      "cons": ["จุดควรระวังที่ 1", "จุดควรระวังที่ 2"]
+      "cons": ["จุดควรระวังที่ 1", "จุดควรระวังที่ 2"],
+      "testPrepare": ["วิธีการเตรียมตัวสอบที่ 1", "วิธีการเตรียมตัวสอบที่ 2"],
+      "rating": "คะแนนเฉลี่ย"
     }
 
     รีวิวที่ใช้สรุป:
     ${reviewContext}
     `;
 
-    return await this.generateText(prompt);
+    const result = await this.generateText(prompt);
+
+    try {
+      // Cache for 24 hours (86400 seconds)
+      await redis.setEx(cacheKey, 86400, result);
+    } catch (err) {
+      console.error("Redis setEx error", err);
+    }
+
+    return result;
   }
 }
