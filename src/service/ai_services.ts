@@ -264,7 +264,16 @@ export class AiService {
 
     console.log("All points:", allPoints.length);
 
-    if (allPoints.length === 0) return "No reviews found in Qdrant.";
+    if (allPoints.length === 0) {
+      // คืนค่ารูปแบบ JSON กลับไปเลยเพื่อไม่ให้ Controller พังตอน JSON.parse และไม่ต้องเปลืองโควตา AI
+      return JSON.stringify({
+        content: "ยังไม่มีข้อมูลรีวิวเพียงพอสำหรับการสรุปผลในขณะนี้",
+        pros: [],
+        cons: [],
+        testPrepare: [],
+        rating: 0,
+      });
+    }
 
     // Separate by Sentiment (Rating)
     const positivePoints = allPoints.filter(
@@ -328,9 +337,16 @@ export class AiService {
     const course = await this.courseRepo.findOne({
       where: { id: courseId },
     });
+
+    // หากมีรีวิวน้อย เราสามารถกำกับใน prompt ให้ AI สรุปแบบถ่อมตัวได้
+    const contextWarning =
+      uniqueReviews.length <= 3
+        ? "(เนื่องจากจำนวนรีวิวมีน้อยมาก ให้สรุปตามข้อมูลที่มีและอาจระบุสั้นๆ ว่าข้อมูลยังน้อย)"
+        : "";
+
     const prompt = `
     คุณคือผู้เชี่ยวชาญด้านการวิเคราะห์ข้อมูลทางการศึกษาและ AI Assistant สำหรับนิสิตมหาวิทยาลัย
-    ภารกิจ: จงสรุปรีวิวจากนักศึกษาจำนวน ${numberOfReview} รายการต่อไปนี้ ของรายวิชา ${course?.nameTh}
+    ภารกิจ: จงสรุปรีวิวจากนักศึกษาจำนวน ${uniqueReviews.length} รายการต่อไปนี้ ของรายวิชา ${course?.nameTh} ${contextWarning}
     
     ข้อกำหนด:  
     - ตอบเป็นภาษาไทย
