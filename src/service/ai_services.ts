@@ -229,10 +229,13 @@ export class AiService {
     //Check cache
     const cacheKey = `course_summary:${courseId}`;
     try {
+      console.log("Checking cache for course", courseId);
       const cachedSummary = await redis.get(cacheKey);
       if (cachedSummary) {
         console.log(`[Cache Hit] Summary for course ${courseId}`);
-        return cachedSummary;
+        return JSON.parse(cachedSummary);
+      } else {
+        console.log(`[Cache Miss] Summary for course ${courseId}`);
       }
     } catch (err) {
       console.error("Redis get error", err);
@@ -252,6 +255,7 @@ export class AiService {
     const recentPoints = recentSearchResult.points;
 
     // Get Vector for calculate Mean Vector
+    console.log("Starting to get all points");
     const allSearchResult = await client.scroll(QDRANT_COLLECTIONS.REVIEWS, {
       filter: {
         must: [{ key: "courseId", match: { value: courseId } }],
@@ -262,17 +266,18 @@ export class AiService {
     });
     const allPoints = allSearchResult.points;
 
-    console.log("All points:", allPoints.length);
+    // console.log("All points:", allPoints.length);
 
     if (allPoints.length === 0) {
       // คืนค่ารูปแบบ JSON กลับไปเลยเพื่อไม่ให้ Controller พังตอน JSON.parse และไม่ต้องเปลืองโควตา AI
-      return JSON.stringify({
+      console.log("No reviews found for course", courseId);
+      return {
         content: "ยังไม่มีข้อมูลรีวิวเพียงพอสำหรับการสรุปผลในขณะนี้",
         pros: [],
         cons: [],
         testPrepare: [],
         rating: 0,
-      });
+      };
     }
 
     // Separate by Sentiment (Rating)
@@ -302,6 +307,7 @@ export class AiService {
       });
       selectedReviews.push(...posSearchResult);
     }
+    console.log("Get positive point successfully")
 
     // Negative Review
     if (negativePoints.length > 0) {
@@ -320,11 +326,13 @@ export class AiService {
       });
       selectedReviews.push(...negSearchResult);
     }
+    console.log("Get negative point successfully")
 
     // Deduplicate
     const uniqueReviews = Array.from(
       new Map(selectedReviews.map((r) => [r.id, r])).values(),
     ).slice(0, numberOfReview);
+    console.log("Deduplicate reviews successfully")
 
     const reviewContext = uniqueReviews
       .map(
@@ -332,7 +340,7 @@ export class AiService {
       )
       .join("\n");
 
-    console.log("Review Context: ", reviewContext);
+    // console.log("Review Context: ", reviewContext);
 
     const course = await this.courseRepo.findOne({
       where: { id: courseId },
@@ -368,12 +376,19 @@ export class AiService {
     ${reviewContext}
     `;
 
-    const result = await this.generateText(prompt);
+    console.log("Starting to generate summary")
+    const summary = await this.generateText(prompt);
+    console.log("Generate summary successfully")
+
+    const cleanSummary = summary.replace(/```json\n?|\n?```/g, "").trim();
+    const result = JSON.parse(cleanSummary);
 
     try {
       // Cache for 24 hours (86400 seconds)
-      await redis.setEx(cacheKey, 86400, result);
+      await redis.setEx(cacheKey, 86400, JSON.stringify(result));
+      console.log("Save result to Redis successfully")
     } catch (err) {
+      console.log("Save result to Redis failed")
       console.error("Redis setEx error", err);
     }
 

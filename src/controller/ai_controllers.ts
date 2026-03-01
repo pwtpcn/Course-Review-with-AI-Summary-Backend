@@ -65,16 +65,14 @@ export const aiController = new Elysia({
     "/reviews/:courseId/summary-qdrant",
     async ({ params, set }) => {
       try {
-        const summary = await aiService.summarizeReviewsFromQdrant(
+        const result = await aiService.summarizeReviewsFromQdrant(
           params.courseId,
         );
-        // Clean markdown code blocks if present
-        const cleanSummary = summary.replace(/```json\n?|\n?```/g, "").trim();
-        const result = JSON.parse(cleanSummary);
         set.status = 200;
         return { result };
       } catch (e: any) {
         set.status = 500;
+        console.error("Error in AI summary:", e);
         return { error: e.message };
       }
     },

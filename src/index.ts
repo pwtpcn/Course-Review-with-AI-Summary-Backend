@@ -1,4 +1,5 @@
 import { Elysia } from "elysia";
+import { cors } from "@elysiajs/cors";
 import { dataSource } from "./lib/data-source";
 import { userController } from "./controller/user_controllers";
 import { courseController } from "./controller/course_controllers";
@@ -13,6 +14,7 @@ await dataSource.initialize();
 await initQdrantCollections();
 
 const app = new Elysia()
+  .use(cors())
   .use(swagger())
   .use(userController)
   .use(courseController)
