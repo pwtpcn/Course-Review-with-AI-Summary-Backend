@@ -59,6 +59,7 @@ export class AiService {
           nameTh: course.nameTh,
           description: course.description,
           credits: course.credits,
+          year: course.year,
         },
       });
     }
@@ -153,6 +154,7 @@ export class AiService {
             nameTh: course.nameTh,
             description: course.description,
             credits: course.credits,
+            year: course.year,
           },
         },
       ],
