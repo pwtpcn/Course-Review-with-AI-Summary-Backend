@@ -1,16 +1,11 @@
-import { Column, Entity, JoinTable, ManyToMany } from "typeorm";
+import { Column, Entity } from "typeorm";
 import { Metadata } from "./common/metadata";
-import { Course } from "./course";
 
 @Entity()
 export class Job extends Metadata {
-  @Column()
+  @Column({ length: 255 })
   name!: string;
 
-  @Column()
+  @Column({ type: "text" })
   details!: string;
-
-  // @JoinTable({ name: "course_jobs" })
-  // @ManyToMany(() => Course, (course) => course.jobs)
-  // courses!: Course[];
 }

@@ -23,25 +23,25 @@ export class Review extends Metadata {
   @JoinColumn({ name: "courseId" })
   course!: CourseType;
 
-  @Column()
+  @Column({ type: "text" })
   content!: string;
 
-  @Column()
+  @Column({ type: "text" })
   pros!: string;
 
-  @Column({ nullable: true, default: "-" })
+  @Column({ nullable: true, default: "-", type: "text" })
   cons?: string;
 
-  @Column()
+  @Column({ type: "smallint" })
   rating!: number;
 
-  @Column({ nullable: true, default: "-" })
+  @Column({ nullable: true, default: "-", type: "text" })
   testPrepare?: string;
 
-  @Column({ default: 0 })
+  @Column({ default: 0, type: "int" })
   like!: number;
 
-  @Column({ default: 0 })
+  @Column({ default: 0, type: "int" })
   dislike!: number;
 
   @Column({ default: false })

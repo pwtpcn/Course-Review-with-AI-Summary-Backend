@@ -5,10 +5,10 @@ import { Report } from "./report";
 
 @Entity()
 export class User extends Metadata {
-  @Column({ unique: true })
+  @Column({ unique: true, length: 255 })
   email!: string;
 
-  @Column({ unique: true })
+  @Column({ unique: true, length: 30 })
   username!: string;
 
   @Column({

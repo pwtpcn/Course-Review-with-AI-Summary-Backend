@@ -8,7 +8,7 @@ import type { Review as ReviewType } from "./review";
 
 @Entity()
 export class Report extends Metadata {
-  @Column()
+  @Column({ length: 500})
   content!: string;
 
   @Column({

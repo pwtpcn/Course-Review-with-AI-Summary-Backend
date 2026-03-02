@@ -1,33 +1,25 @@
-import {
-  Column,
-  Entity,
-  JoinTable,
-  ManyToMany,
-  OneToMany,
-  PrimaryColumn,
-} from "typeorm";
+import { Column, Entity, OneToMany, PrimaryColumn } from "typeorm";
 import { MetadataWithoutId } from "./common/metadata_without_id";
-import { Job } from "./job";
 import { Review } from "./review";
 
 @Entity()
 export class Course extends MetadataWithoutId {
-  @PrimaryColumn()
+  @PrimaryColumn({ length: 10 })
   id!: string;
 
-  @Column()
+  @Column({ length: 255 })
   nameTh!: string;
 
-  @Column()
+  @Column({ length: 255 })
   nameEn!: string;
 
-  @Column()
+  @Column({ type: "text" })
   description!: string;
 
-  @Column()
+  @Column({ type: "smallint" })
   credits!: number;
 
-  @Column()
+  @Column({ type: "smallint" })
   year!: number;
 
   @Column({
@@ -36,10 +28,6 @@ export class Course extends MetadataWithoutId {
     default: "Core",
   })
   category!: "Core" | "Elective";
-
-  // @JoinTable({ name: "course_jobs" })
-  // @ManyToMany(() => Job, (job) => job.courses)
-  // jobs!: Job[];
 
   @OneToMany(() => Review, (review) => review.course)
   reviews!: Review[];
