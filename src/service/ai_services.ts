@@ -60,6 +60,7 @@ export class AiService {
           description: course.description,
           credits: course.credits,
           year: course.year,
+          category: course.category,
         },
       });
     }
@@ -155,6 +156,7 @@ export class AiService {
             description: course.description,
             credits: course.credits,
             year: course.year,
+            category: course.category,
           },
         },
       ],
@@ -217,14 +219,123 @@ export class AiService {
 
   // --- Search/Recommendation Functions ---
 
-  async recommendCourses(jobDescription: string, limit: number = 5) {
-    const queryVector = await this.getEmbedding(jobDescription);
-    const searchResult = await client.search(QDRANT_COLLECTIONS.COURSES, {
-      vector: queryVector,
-      limit: limit,
+  async recommendCourses(jobId: string) {
+    if (!jobId) return null;
+
+    const job = await this.jobRepo.findOne({ where: { id: jobId } });
+    if (!job) return null;
+
+    const jobName = job.name;
+
+    // Check cache
+    const cacheKey = `job_recommendation:${jobName}`;
+    try {
+      console.log("Checking cache for job recommendation", jobName);
+      const cachedRecommendation = await redis.get(cacheKey);
+      if (cachedRecommendation) {
+        console.log(`[Cache Hit] Recommendation for job ${jobName}`);
+        return JSON.parse(cachedRecommendation);
+      } else {
+        console.log(`[Cache Miss] Recommendation for job ${jobName}`);
+      }
+    } catch (err) {
+      console.error("Redis get error", err);
+    }
+
+    // Get embedding for the job
+    const jobResults = await client.retrieve(QDRANT_COLLECTIONS.JOBS, {
+      ids: [jobId],
+      with_vector: true,
       with_payload: true,
     });
-    return searchResult;
+
+    if (!jobResults || jobResults.length === 0 || !jobResults[0].vector) {
+      throw new Error("Job not found or has no vector");
+    }
+
+    const jobVector = jobResults[0].vector;
+    const jobPayload = jobResults[0].payload as any;
+    const jobDetails = jobPayload?.details || "";
+
+    // Perform semantic search
+    const searchResult = await client.search(QDRANT_COLLECTIONS.COURSES, {
+      vector: jobVector as number[],
+      limit: 10,
+      with_payload: true,
+    });
+
+    const recommendedCourses = searchResult.map((res) => ({
+      originalId: res.payload?.originalId || res.id,
+      nameEn: res.payload?.nameEn,
+      nameTh: res.payload?.nameTh,
+      description: res.payload?.description,
+      category: res.payload?.category,
+    }));
+
+    // Prepare courses context
+    const coursesContext = recommendedCourses
+      .map(
+        (c: any, index) =>
+          `${index + 1}. วิชา ${c.nameTh || c.nameEn} (รหัส: ${c.id}): ${c.description}`,
+      )
+      .join("\n");
+
+    const prompt = `
+      คุณคือผู้เชี่ยวชาญด้านแนะแนวการศึกษาและอาชีพ
+      ภารกิจ: ให้คุณวิเคราะห์ว่าทำไม 10 รายวิชาเหล่านี้ถึงเหมาะสมในการเตรียมตัวเข้าสู่สายงาน "${jobName}"
+      รายละเอียดสายงาน: ${jobDetails}
+
+      รายวิชาที่ระบบแนะนำ:
+      ${coursesContext}
+
+      ข้อกำหนด:
+      - ตอบเป็นภาษาไทย
+      - **aiSummary**: สรุปภาพรวมว่าสายงานนี้เน้นทักษะอะไรและวิชาเหล่านี้ตอบโจทย์อย่างไร
+      - คืนค่าเป็น JSON เท่านั้นตามโครงสร้างนี้:
+      {
+        "aiSummary": "สรุปภาพรวม...",
+      }
+
+      ตัวอย่าง:
+      {
+        "aiSummary": "สายงาน Software Engineer เน้นทักษะการคิดวิเคราะห์ การแก้ปัญหา การออกแบบระบบ การเขียนโปรแกรม การทดสอบ และการทำงานร่วมกับผู้อื่น รายวิชาทั้ง 10 รายการนี้ครอบคลุมทักษะที่จำเป็นอย่างครอบคลุม โดยเริ่มจากพื้นฐานการคิดเชิงคำนวณและแนวคิดการโปรแกรมเบื้องต้น (5) ต่อเนื่องไปถึงหลักการออกแบบและพัฒนาซอฟต์แวร์อย่างเป็นระบบ (1, 3, 7) การฝึกปฏิบัติจริง (2) และการพัฒนาซอฟต์แวร์ที่ทันสมัย เช่น เว็บเทคโนโลยี (6) และกระบวนการ Agile/DevOps (8) วิชาเหล่านี้ยังรวมถึงการให้ความสำคัญกับการทดสอบคุณภาพซอฟต์แวร์ (4) และการนำไปประยุกต์ใช้ในบริบทเฉพาะ เช่น ระบบ ERP (9) และเทคโนโลยีทางการเงิน (10) ซึ่งช่วยให้นักพัฒนามีความเข้าใจในภาพรวมของวงจรชีวิตซอฟต์แวร์และความต้องการทางธุรกิจที่หลากหลาย",
+      }
+
+      โดย ตัวเลขใน () ลำดับของวิชาในรายการ รายวิชาที่ระบบแนะนำ
+      `;
+
+    const aiResponseText = await this.generateText(prompt);
+    const cleanAiResponse = aiResponseText
+      .replace(/```json\n?|\n?```/g, "")
+      .trim();
+
+    let aiAnalysis = { aiSummary: "" };
+    try {
+      aiAnalysis = JSON.parse(cleanAiResponse);
+    } catch (parseError) {
+      console.error("Error parsing AI response", parseError, cleanAiResponse);
+    }
+
+    // Combine and format final result
+    const finalResult = {
+      jobId,
+      jobName,
+      aiSummary:
+        aiAnalysis?.aiSummary ||
+        "ระบบแนะนำรายวิชาที่สอดคล้องกับทักษะที่ต้องการในสายงานนี้",
+      recommendedCourses,
+    };
+
+    // Cache for 24 hours (86400 seconds)
+    try {
+      await redis.setEx(cacheKey, 86400, JSON.stringify(finalResult));
+      console.log("Save recommendation result to Redis successfully");
+    } catch (err) {
+      console.log("Save recommendation result to Redis failed");
+      console.error("Redis setEx error", err);
+    }
+
+    return finalResult;
   }
 
   async summarizeReviewsFromQdrant(courseId: string) {
@@ -268,7 +379,6 @@ export class AiService {
     const allPoints = allSearchResult.points;
 
     if (allPoints.length === 0) {
-      // คืนค่ารูปแบบ JSON กลับไปเลยเพื่อไม่ให้ Controller พังตอน JSON.parse และไม่ต้องเปลืองโควตา AI
       console.log("No reviews found for course", courseId);
       return {
         content: "ยังไม่มีข้อมูลรีวิวเพียงพอสำหรับการสรุปผลในขณะนี้",
@@ -340,7 +450,7 @@ export class AiService {
       where: { id: courseId },
     });
 
-    // หากมีรีวิวน้อย เราสามารถกำกับใน prompt ให้ AI สรุปแบบถ่อมตัวได้
+    // รีวิวน้อย กำกับ AI สรุปแบบถ่อมตัว
     const contextWarning =
       uniqueReviews.length <= 3
         ? "(เนื่องจากจำนวนรีวิวมีน้อยมาก ให้สรุปตามข้อมูลที่มีและอาจระบุสั้นๆ ว่าข้อมูลยังน้อย)"
@@ -378,9 +488,9 @@ export class AiService {
     try {
       // Cache for 24 hours (86400 seconds)
       await redis.setEx(cacheKey, 86400, JSON.stringify(result));
-      console.log("Save result to Redis successfully")
+      console.log("Save result to Redis successfully");
     } catch (err) {
-      console.log("Save result to Redis failed")
+      console.log("Save result to Redis failed");
       console.error("Redis setEx error", err);
     }
 

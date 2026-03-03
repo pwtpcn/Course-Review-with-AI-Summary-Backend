@@ -27,13 +27,14 @@ export const aiController = new Elysia({
         };
       } catch (e: any) {
         set.status = 500;
+        console.error("Error in AI sync:", e);
         return { error: e.message };
       }
     },
     {
       detail: {
+        description: "Sync all data to Qdrant",
         summary: "Sync all data to Qdrant",
-        tags: ["AI"],
       },
     },
   )
@@ -42,21 +43,22 @@ export const aiController = new Elysia({
     "/recommend",
     async ({ body, set }) => {
       try {
-        const result = await aiService.recommendCourses(body.jobDescription);
+        const result = await aiService.recommendCourses(body.jobId);
         set.status = 200;
         return result;
       } catch (e: any) {
         set.status = 500;
+        console.error("Error in AI recommendation:", e);
         return { error: e.message };
       }
     },
     {
       body: t.Object({
-        jobDescription: t.String(),
+        jobId: t.String(),
       }),
       detail: {
-        summary: "Recommend courses based on job description",
-        tags: ["AI"],
+        description: "Recommend courses based on job ID using vector search",
+        summary: "Recommend courses based on job ID using vector search",
       },
     },
   )
@@ -81,8 +83,8 @@ export const aiController = new Elysia({
         courseId: t.String(),
       }),
       detail: {
+        description: "Summarize reviews for a course (Qdrant Source)",
         summary: "Summarize reviews for a course (Qdrant Source)",
-        tags: ["AI"],
       },
     },
   );

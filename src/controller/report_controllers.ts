@@ -33,7 +33,6 @@ export const reportController = new Elysia({
     {
       body: t.Object({
         content: t.String(),
-        // userId: t.String(), // Removed
         reviewId: t.String(),
       }),
       detail: {
