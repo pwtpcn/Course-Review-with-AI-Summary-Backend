@@ -23,7 +23,7 @@ export class AiService {
     this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
     // this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     this.model = this.genAI.getGenerativeModel({
-      model: "gemini-3-pro-preview",
+      model: "gemini-2.5-flash-lite",
     });
     this.embeddingModel = this.genAI.getGenerativeModel({
       model: "gemini-embedding-001",
@@ -257,7 +257,6 @@ export class AiService {
     const recentPoints = recentSearchResult.points;
 
     // Get Vector for calculate Mean Vector
-    console.log("Starting to get all points");
     const allSearchResult = await client.scroll(QDRANT_COLLECTIONS.REVIEWS, {
       filter: {
         must: [{ key: "courseId", match: { value: courseId } }],
@@ -267,8 +266,6 @@ export class AiService {
       with_vector: true,
     });
     const allPoints = allSearchResult.points;
-
-    // console.log("All points:", allPoints.length);
 
     if (allPoints.length === 0) {
       // คืนค่ารูปแบบ JSON กลับไปเลยเพื่อไม่ให้ Controller พังตอน JSON.parse และไม่ต้องเปลืองโควตา AI
@@ -309,7 +306,6 @@ export class AiService {
       });
       selectedReviews.push(...posSearchResult);
     }
-    console.log("Get positive point successfully")
 
     // Negative Review
     if (negativePoints.length > 0) {
@@ -328,21 +324,17 @@ export class AiService {
       });
       selectedReviews.push(...negSearchResult);
     }
-    console.log("Get negative point successfully")
 
     // Deduplicate
     const uniqueReviews = Array.from(
       new Map(selectedReviews.map((r) => [r.id, r])).values(),
     ).slice(0, numberOfReview);
-    console.log("Deduplicate reviews successfully")
 
     const reviewContext = uniqueReviews
       .map(
         (res, index) => `รีวิวที่ ${index + 1}: ${JSON.stringify(res.payload)}`,
       )
       .join("\n");
-
-    // console.log("Review Context: ", reviewContext);
 
     const course = await this.courseRepo.findOne({
       where: { id: courseId },
@@ -378,9 +370,7 @@ export class AiService {
     ${reviewContext}
     `;
 
-    console.log("Starting to generate summary")
     const summary = await this.generateText(prompt);
-    console.log("Generate summary successfully")
 
     const cleanSummary = summary.replace(/```json\n?|\n?```/g, "").trim();
     const result = JSON.parse(cleanSummary);
