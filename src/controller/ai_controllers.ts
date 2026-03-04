@@ -39,13 +39,13 @@ export const aiController = new Elysia({
     },
   )
 
-  .post(
-    "/recommend",
-    async ({ body, set }) => {
+  .get(
+    "/job/recommend/:jobId",
+    async ({ params, set }) => {
       try {
-        const result = await aiService.recommendCourses(body.jobId);
+        const result = await aiService.recommendCourses(params.jobId);
         set.status = 200;
-        return result;
+        return { result };
       } catch (e: any) {
         set.status = 500;
         console.error("Error in AI recommendation:", e);
@@ -53,7 +53,7 @@ export const aiController = new Elysia({
       }
     },
     {
-      body: t.Object({
+      params: t.Object({
         jobId: t.String(),
       }),
       detail: {
