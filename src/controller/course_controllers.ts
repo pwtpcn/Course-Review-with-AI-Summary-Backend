@@ -151,6 +151,30 @@ export const courseController = new Elysia({
     },
   )
 
+  .post(
+    "/recalculate-rating/:id",
+    async ({ params: { id }, set, user }) => {
+      try {
+        const updatedCourse = await service.recalculateCourseRating(id);
+        set.status = 200;
+        return { message: "Course rating recalculated", course: updatedCourse };
+      } catch (e: any) {
+        if (e.message === "Course not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
+        return { error: e.message };
+      }
+    },
+    {
+      detail: {
+        description: "Recalculate course rating based on active reviews",
+        summary: "Recalculate course rating",
+      },
+    },
+  )
+
   .delete(
     "/delete/:id",
     async ({ params: { id }, set, user }) => {

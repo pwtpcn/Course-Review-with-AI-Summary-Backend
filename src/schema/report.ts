@@ -8,8 +8,14 @@ import type { Review as ReviewType } from "./review";
 
 @Entity()
 export class Report extends Metadata {
-  @Column({ length: 500})
+  @Column({ length: 500 })
   content!: string;
+
+  @Column({
+    type: "enum",
+    enum: ["spam", "inappropriate", "irrelevant", "other"],
+  })
+  reason!: "spam" | "inappropriate" | "irrelevant" | "other";
 
   @Column({
     type: "enum",

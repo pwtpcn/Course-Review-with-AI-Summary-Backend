@@ -2,6 +2,7 @@ import { Course } from "../schema/course";
 import { dataSource } from "../lib/data-source";
 import { DataSource } from "typeorm";
 import { CreateCourseInput, UpdateCourseInput } from "../dto/course.dto";
+import { Review } from "../schema/review";
 
 export class CourseServices {
   private dataSource: DataSource;
@@ -79,6 +80,29 @@ export class CourseServices {
     const course = await this.getCourseByIdOrThrow(id);
 
     Object.assign(course, courseData);
+    return await this.dataSource.manager.save(course);
+  }
+
+  async recalculateCourseRating(courseId: string) {
+    const course = await this.getCourseByIdOrThrow(courseId);
+
+    // Calculate new average and count
+    const result = await this.dataSource.manager
+      .createQueryBuilder(Review, "review")
+      .select("AVG(review.rating)", "average")
+      .addSelect("COUNT(review.id)", "count")
+      .where("review.courseId = :courseId", { courseId })
+      .andWhere("review.status = :status", { status: "active" }) // only count active reviews
+      .getRawOne();
+
+    const averageRating = result?.average
+      ? parseFloat(parseFloat(result.average).toFixed(1))
+      : 0;
+    const reviewCount = result?.count ? parseInt(result.count, 10) : 0;
+
+    // Update course with new values
+    course.rating = averageRating;
+    course.reviewCount = reviewCount;
     return await this.dataSource.manager.save(course);
   }
 

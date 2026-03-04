@@ -29,6 +29,12 @@ export class Course extends MetadataWithoutId {
   })
   category!: "Core" | "Elective";
 
+  @Column({ type: "float", default: 0 })
+  rating!: number;
+
+  @Column({ type: "int", default: 0 })
+  reviewCount!: number;
+
   @OneToMany(() => Review, (review) => review.course)
   reviews!: Review[];
 }
