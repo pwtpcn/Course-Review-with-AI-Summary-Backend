@@ -1,6 +1,5 @@
 import { Elysia, t } from "elysia";
 import { ReportService } from "../service/report_services";
-import type { CreateReportInput } from "../dto/report.dto";
 import { authMiddleware } from "../middleware/auth";
 
 const reportService = new ReportService();
@@ -34,6 +33,7 @@ export const reportController = new Elysia({
       body: t.Object({
         content: t.String(),
         reviewId: t.String(),
+        reason: t.Union([t.Literal("spam"), t.Literal("inappropriate"), t.Literal("irrelevant"), t.Literal("other")]),
       }),
       detail: {
         description: "Create a new report",

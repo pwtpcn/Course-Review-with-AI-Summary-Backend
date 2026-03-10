@@ -13,6 +13,7 @@ export class ReportService {
   async createReport(reportData: CreateReportInput) {
     const report = new Report();
     report.content = reportData.content;
+    report.reason = reportData.reason;
     report.userId = reportData.userId;
     report.reviewId = reportData.reviewId;
 

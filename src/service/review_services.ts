@@ -39,7 +39,7 @@ export class ReviewServices {
     return this.dataSource.manager.find(Review, {
       where,
       order,
-      relations: ["course"],
+      relations: ["course", "reports"],
     });
   }
 
@@ -75,7 +75,7 @@ export class ReviewServices {
     return this.dataSource.manager.find(Review, {
       where,
       order,
-      relations: ["course"],
+      relations: ["course", "reports"],
     });
   }
 
@@ -99,7 +99,7 @@ export class ReviewServices {
     return this.dataSource.manager.find(Review, {
       where,
       order,
-      relations: ["course"],
+      relations: ["course", "reports"],
     });
   }
 
