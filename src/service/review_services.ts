@@ -44,7 +44,10 @@ export class ReviewServices {
   }
 
   async getReviewById(id: string) {
-    return this.dataSource.manager.findOne(Review, { where: { id } });
+    return this.dataSource.manager.findOne(Review, {
+      where: { id },
+      relations: ["course", "reports"],
+    });
   }
 
   async getReviewByIdOrThrow(id: string) {

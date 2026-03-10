@@ -199,7 +199,7 @@ export const reviewController = new Elysia({
       try {
         // Fetch review to check ownership
         const existingReview = await service.getReviewByIdOrThrow(id);
-        if (existingReview.user.id !== user.id && user.role !== "admin") {
+        if (existingReview.userId !== user.id && user.role !== "admin") {
           set.status = 403;
           return { error: "Forbidden" };
         }
