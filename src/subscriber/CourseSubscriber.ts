@@ -3,6 +3,7 @@ import {
   EntitySubscriberInterface,
   InsertEvent,
   UpdateEvent,
+  RemoveEvent,
 } from "typeorm";
 import { Course } from "../schema/course";
 import { AiService } from "../service/ai_services";
@@ -35,6 +36,21 @@ export class CourseSubscriber implements EntitySubscriberInterface<Course> {
       );
       this.aiService.syncCourse(event.entity.id).catch((err) => {
         console.error("Failed to sync updated course to Qdrant:", err);
+      });
+    }
+  }
+
+  async afterRemove(event: RemoveEvent<Course>) {
+    const entityId =
+      event.entityId ||
+      event.databaseEntity?.id ||
+      (event.entity && event.entity.id);
+    if (entityId) {
+      console.log(
+        `[CourseSubscriber] Deleting course from Qdrant: ${entityId}`,
+      );
+      this.aiService.deleteCourse(entityId).catch((err) => {
+        console.error("Failed to delete course from Qdrant:", err);
       });
     }
   }

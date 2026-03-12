@@ -3,6 +3,7 @@ import {
   EntitySubscriberInterface,
   InsertEvent,
   UpdateEvent,
+  RemoveEvent,
 } from "typeorm";
 import { Job } from "../schema/job";
 import { AiService } from "../service/ai_services";
@@ -35,6 +36,19 @@ export class JobSubscriber implements EntitySubscriberInterface<Job> {
       );
       this.aiService.syncJob(event.entity.id).catch((err) => {
         console.error("Failed to sync updated job to Qdrant:", err);
+      });
+    }
+  }
+
+  async afterRemove(event: RemoveEvent<Job>) {
+    const entityId =
+      event.entityId ||
+      event.databaseEntity?.id ||
+      (event.entity && event.entity.id);
+    if (entityId) {
+      console.log(`[JobSubscriber] Deleting job from Qdrant: ${entityId}`);
+      this.aiService.deleteJob(entityId).catch((err) => {
+        console.error("Failed to delete job from Qdrant:", err);
       });
     }
   }

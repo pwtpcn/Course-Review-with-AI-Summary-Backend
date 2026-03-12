@@ -120,7 +120,7 @@ export class ReviewServices {
 
   async deleteReview(id: string) {
     const deletedReview = await this.getReviewByIdOrThrow(id);
-    await this.dataSource.manager.delete(Review, id);
+    await this.dataSource.manager.remove(Review, deletedReview);
 
     return deletedReview;
   }

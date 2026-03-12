@@ -12,14 +12,14 @@ export class Review extends Metadata {
   @Column()
   userId!: string;
 
-  @ManyToOne(() => User, (user) => user.reviews)
+  @ManyToOne(() => User, (user) => user.reviews, { onDelete: "CASCADE" })
   @JoinColumn({ name: "userId" })
   user!: UserType;
 
   @Column()
   courseId!: string;
 
-  @ManyToOne(() => Course, (course) => course.reviews)
+  @ManyToOne(() => Course, (course) => course.reviews, { onDelete: "CASCADE" })
   @JoinColumn({ name: "courseId" })
   course!: CourseType;
 

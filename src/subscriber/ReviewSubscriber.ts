@@ -3,6 +3,7 @@ import {
   EntitySubscriberInterface,
   InsertEvent,
   UpdateEvent,
+  RemoveEvent,
 } from "typeorm";
 import { Review } from "../schema/review";
 import { AiService } from "../service/ai_services";
@@ -37,6 +38,21 @@ export class ReviewSubscriber implements EntitySubscriberInterface<Review> {
       );
       this.aiService.syncReview(entityId).catch((err) => {
         console.error("Failed to sync updated review to Qdrant:", err);
+      });
+    }
+  }
+
+  async afterRemove(event: RemoveEvent<Review>) {
+    const entityId =
+      event.entityId ||
+      event.databaseEntity?.id ||
+      (event.entity && event.entity.id);
+    if (entityId) {
+      console.log(
+        `[ReviewSubscriber] Deleting review from Qdrant: ${entityId}`,
+      );
+      this.aiService.deleteReview(entityId).catch((err) => {
+        console.error("Failed to delete review from Qdrant:", err);
       });
     }
   }

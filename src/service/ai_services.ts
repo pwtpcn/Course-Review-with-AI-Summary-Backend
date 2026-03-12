@@ -40,8 +40,7 @@ export class AiService {
     return result.response.text();
   }
 
-  // --- Sync Functions ---
-
+  //#region Sync All
   async syncCourses() {
     const courses = await this.courseRepo.find();
     const points = [];
@@ -135,7 +134,9 @@ export class AiService {
     }
     return { count: points.length };
   }
+  //#endregion
 
+  //#region Sync 1 by 1
   async syncCourse(courseId: string) {
     const course = await this.courseRepo.findOne({ where: { id: courseId } });
     if (!course) return null;
@@ -216,9 +217,36 @@ export class AiService {
     });
     return true;
   }
+  //#endregion
 
-  // --- Search/Recommendation Functions ---
+  //#region Delete Function
+  async deleteCourse(courseId: string) {
+    const id = uuidv5(courseId, NAMESPACE);
+    await client.delete(QDRANT_COLLECTIONS.COURSES, {
+      wait: true,
+      points: [id],
+    });
+    return true;
+  }
 
+  async deleteJob(jobId: string) {
+    await client.delete(QDRANT_COLLECTIONS.JOBS, {
+      wait: true,
+      points: [jobId],
+    });
+    return true;
+  }
+
+  async deleteReview(reviewId: string) {
+    await client.delete(QDRANT_COLLECTIONS.REVIEWS, {
+      wait: true,
+      points: [reviewId],
+    });
+    return true;
+  }
+  //#endregion
+
+  //#region Recommend Course
   async recommendCourses(jobId: string) {
     if (!jobId) return null;
 
@@ -337,7 +365,9 @@ export class AiService {
 
     return finalResult;
   }
+  //#endregion
 
+  //#region Summarize Review
   async summarizeReviewsFromQdrant(courseId: string) {
     //Check cache
     const cacheKey = `course_summary:${courseId}`;
@@ -496,4 +526,5 @@ export class AiService {
 
     return result;
   }
+  //#endregion
 }

@@ -57,9 +57,9 @@ export class ReportService {
   }
 
   async deleteReport(id: string) {
-    const report = await this.getReportByIdOrThrow(id);
-    await this.dataSource.manager.delete(Report, id);
-    return report;
+    const deletedReport = await this.getReportByIdOrThrow(id);
+    await this.dataSource.manager.remove(Report, deletedReport);
+    return deletedReport;
   }
 
   async cancelReport(id: string) {

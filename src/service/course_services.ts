@@ -108,7 +108,7 @@ export class CourseServices {
 
   async deleteCourse(id: string) {
     const deletedCourse = await this.getCourseByIdOrThrow(id);
-    await this.dataSource.manager.delete(Course, id);
+    await this.dataSource.manager.remove(Course, deletedCourse);
     return deletedCourse;
   }
 }
