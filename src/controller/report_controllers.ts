@@ -44,9 +44,9 @@ export const reportController = new Elysia({
 
   .get(
     "/getall",
-    async ({ query: { sortBy }, set }) => {
+    async ({ query: { sortBy, status, reason, search }, set }) => {
       try {
-        const reports = await reportService.getAllReports(sortBy);
+        const reports = await reportService.getAllReports(sortBy, status, reason, search);
         set.status = 200;
         return { message: "Reports fetched successfully", reports };
       } catch (e: any) {
@@ -57,6 +57,9 @@ export const reportController = new Elysia({
     {
       query: t.Object({
         sortBy: t.Optional(t.Union([t.Literal("newest"), t.Literal("oldest")])),
+        status: t.Optional(t.Union([t.Literal("pending"), t.Literal("approved"), t.Literal("rejected")])),
+        reason: t.Optional(t.Union([t.Literal("spam"), t.Literal("inappropriate"), t.Literal("irrelevant"), t.Literal("other")])),
+        search: t.Optional(t.String()),
       }),
       detail: {
         description: "Get all reports",
@@ -178,12 +181,17 @@ export const reportController = new Elysia({
   .patch(
     "/approve/:id",
     async ({ params: { id }, set, user }) => {
-      // Admin only
-      if (user?.role !== "admin") {
-        set.status = 403;
-        return { error: "Forbidden" };
+      if (!user) {
+        set.status = 401;
+        return { error: "Unauthorized" };
       }
       try {
+        // Check ownership or admin
+        const existingReport = await reportService.getReportByIdOrThrow(id);
+        if (existingReport.user.id !== user.id && user.role !== "admin") {
+          set.status = 403;
+          return { error: "Forbidden" };
+        }
         const report = await reportService.approveReport(id);
         set.status = 200;
         return { message: "Report approved successfully", report };

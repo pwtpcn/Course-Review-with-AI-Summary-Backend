@@ -68,7 +68,7 @@ export const courseController = new Elysia({
     },
     {
       query: t.Object({
-        sortBy: t.Optional(t.Union([t.Literal("newest"), t.Literal("oldest")])),
+        sortBy: t.Optional(t.Union([t.Literal("newest"), t.Literal("oldest"), t.Literal("idAsc")])),
         category: t.Optional(
           t.Union([t.Literal("Core"), t.Literal("Elective")]),
         ),

@@ -20,14 +20,36 @@ export class ReportService {
     return this.dataSource.manager.save(Report, report);
   }
 
-  async getAllReports(sortBy?: "newest" | "oldest") {
-    const order: any = {};
-    if (sortBy === "newest") {
-      order.createdAt = "DESC";
-    } else if (sortBy === "oldest") {
-      order.createdAt = "ASC";
+  async getAllReports(
+    sortBy?: "newest" | "oldest",
+    status?: "pending" | "approved" | "rejected",
+    reason?: "spam" | "inappropriate" | "irrelevant" | "other",
+    search?: string,
+  ) {
+    const query = this.dataSource.manager.createQueryBuilder(Report, "report");
+
+    if (status) {
+      query.andWhere("report.status = :status", { status });
     }
-    return this.dataSource.manager.find(Report, { order });
+
+    if (reason) {
+      query.andWhere("report.reason = :reason", { reason });
+    }
+
+    if (search) {
+      query.andWhere(
+        "(report.id LIKE :search OR report.reviewId LIKE :search OR report.userId LIKE :search)",
+        { search: `%${search}%` },
+      );
+    }
+
+    if (sortBy === "oldest") {
+      query.orderBy("report.createdAt", "ASC");
+    } else {
+      query.orderBy("report.createdAt", "DESC");
+    }
+
+    return query.getMany();
   }
 
   async getReportByIdOrThrow(id: string) {
@@ -39,7 +61,10 @@ export class ReportService {
   }
 
   async getReportById(id: string) {
-    return this.dataSource.manager.findOne(Report, { where: { id } });
+    return this.dataSource.manager.findOne(Report, {
+      where: { id },
+      relations: ["user"],
+    });
   }
 
   async getReportByReviewId(reviewId: string) {

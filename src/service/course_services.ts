@@ -29,7 +29,7 @@ export class CourseServices {
   }
 
   async getAllCourses(
-    sortBy?: "newest" | "oldest",
+    sortBy?: "newest" | "oldest" | "idAsc",
     category?: "Core" | "Elective",
     year?: number,
     search?: string,
@@ -55,6 +55,8 @@ export class CourseServices {
       query.orderBy("course.createdAt", "DESC");
     } else if (sortBy === "oldest") {
       query.orderBy("course.createdAt", "ASC");
+    } else {
+      query.orderBy("course.id", "ASC");
     }
 
     return query.getMany();

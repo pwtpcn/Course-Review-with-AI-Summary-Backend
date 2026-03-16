@@ -31,14 +31,24 @@ export class ReviewSubscriber implements EntitySubscriberInterface<Review> {
 
   async afterUpdate(event: UpdateEvent<Review>) {
     const entityId = event.entity?.id || event.databaseEntity?.id;
+    const currentStatus = event.entity?.status || event.databaseEntity?.status;
 
     if (entityId) {
-      console.log(
-        `[ReviewSubscriber] Syncing updated review to Qdrant: ${entityId}`,
-      );
-      this.aiService.syncReview(entityId).catch((err) => {
-        console.error("Failed to sync updated review to Qdrant:", err);
-      });
+      if (currentStatus === "hidden") {
+        console.log(
+          `[ReviewSubscriber] Deleting hidden review from Qdrant: ${entityId}`,
+        );
+        this.aiService.deleteReview(entityId).catch((err) => {
+          console.error("Failed to delete hidden review from Qdrant:", err);
+        });
+      } else {
+        console.log(
+          `[ReviewSubscriber] Syncing updated review to Qdrant: ${entityId}`,
+        );
+        this.aiService.syncReview(entityId).catch((err) => {
+          console.error("Failed to sync updated review to Qdrant:", err);
+        });
+      }
     }
   }
 

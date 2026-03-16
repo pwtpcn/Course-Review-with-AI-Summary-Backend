@@ -142,6 +142,38 @@ export const reviewController = new Elysia({
   )
 
   .put(
+    "/hide/:id",
+    async ({ params: { id }, set, user }) => {
+      if (!user) {
+        set.status = 401;
+        return { error: "Unauthorized" };
+      }
+      if (user.role !== "admin") {
+        set.status = 403;
+        return { error: "Forbidden" };
+      }
+      try {
+        const review = await service.hideReview(id);
+        set.status = 200;
+        return { message: "Review hidden successfully", review };
+      } catch (e: any) {
+        if (e.message === "Review not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
+        return { error: e.message };
+      }
+    },
+    {
+      detail: {
+        description: "Hide a review by id (Soft Delete)",
+        summary: "Hide a review by id",
+      },
+    },
+  )
+
+  .put(
     "/update/:id",
     async ({ params: { id }, body, set, user }) => {
       if (!user) {
@@ -149,7 +181,6 @@ export const reviewController = new Elysia({
         return { error: "Unauthorized" };
       }
       try {
-        // Fetch review to check ownership
         const existingReview = await service.getReviewByIdOrThrow(id);
         if (existingReview.userId !== user.id && user.role !== "admin") {
           set.status = 403;
