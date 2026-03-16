@@ -23,24 +23,33 @@ export class ReviewServices {
     return this.dataSource.manager.save(Review, review);
   }
 
-  async getAllReviews(sortBy?: "newest" | "oldest", includeHidden = false) {
-    const order: any = {};
+  async getAllReviews(
+    sortBy?: "newest" | "oldest",
+    status?: "active" | "hidden",
+    search?: string,
+  ) {
+    const query = this.dataSource.manager.createQueryBuilder(Review, "review")
+
+    if (status) {
+      query.andWhere("review.status = :status", { status });
+    }
+
+    if (search) {
+      query.andWhere(
+        "(review.courseId LIKE :search OR review.content LIKE :search OR review.userId LIKE :search)",
+        { search: `%${search}%` },
+      );
+    }
+
     if (sortBy === "newest") {
-      order.createdAt = "DESC";
+      query.orderBy("review.createdAt", "DESC");
     } else if (sortBy === "oldest") {
-      order.createdAt = "ASC";
+      query.orderBy("review.createdAt", "ASC");
+    } else {
+      query.orderBy("review.createdAt", "DESC");
     }
 
-    const where: any = {};
-    if (!includeHidden) {
-      where.status = "active";
-    }
-
-    return this.dataSource.manager.find(Review, {
-      where,
-      order,
-      relations: ["course", "reports"],
-    });
+    return query.getMany();
   }
 
   async getReviewById(id: string) {

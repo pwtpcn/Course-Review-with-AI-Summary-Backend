@@ -44,10 +44,9 @@ export const reviewController = new Elysia({
 
   .get(
     "/getall",
-    async ({ query: { sortBy, includeHidden }, set }) => {
+    async ({ query: { sortBy, status, search }, set }) => {
       try {
-        const isHidden = includeHidden === "true";
-        const reviews = await service.getAllReviews(sortBy, isHidden);
+        const reviews = await service.getAllReviews(sortBy, status, search);
         set.status = 200;
         return { message: "Reviews fetched successfully", reviews };
       } catch (e: any) {
@@ -58,7 +57,8 @@ export const reviewController = new Elysia({
     {
       query: t.Object({
         sortBy: t.Optional(t.Union([t.Literal("newest"), t.Literal("oldest")])),
-        includeHidden: t.Optional(t.String()),
+        status: t.Optional(t.Union([t.Literal("active"), t.Literal("hidden")])),
+        search: t.Optional(t.String()),
       }),
       detail: {
         description: "Get all reviews",
