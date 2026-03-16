@@ -298,7 +298,7 @@ export class AiService {
       nameTh: res.payload?.nameTh,
       description: res.payload?.description,
       category: res.payload?.category,
-    }));
+    })).sort((a, b) => Number(a.originalId) - Number(b.originalId));
 
     // Prepare courses context
     const coursesContext = recommendedCourses
