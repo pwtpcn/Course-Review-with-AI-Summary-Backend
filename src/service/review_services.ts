@@ -29,6 +29,8 @@ export class ReviewServices {
     search?: string,
   ) {
     const query = this.dataSource.manager.createQueryBuilder(Review, "review")
+      .leftJoinAndSelect("review.course", "course")
+      .leftJoinAndSelect("review.reports", "reports");
 
     if (status) {
       query.andWhere("review.status = :status", { status });
@@ -36,7 +38,7 @@ export class ReviewServices {
 
     if (search) {
       query.andWhere(
-        "(review.courseId LIKE :search OR review.content LIKE :search OR review.userId LIKE :search)",
+        "(review.courseId::text LIKE :search OR review.content LIKE :search OR review.userId::text LIKE :search)",
         { search: `%${search}%` },
       );
     }
