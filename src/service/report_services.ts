@@ -26,7 +26,9 @@ export class ReportService {
     reason?: "spam" | "inappropriate" | "irrelevant" | "other",
     search?: string,
   ) {
-    const query = this.dataSource.manager.createQueryBuilder(Report, "report");
+    const query = this.dataSource.manager.createQueryBuilder(Report, "report")
+      .leftJoinAndSelect("report.review", "review")
+      .leftJoinAndSelect("report.user", "user");
 
     if (status) {
       query.andWhere("report.status = :status", { status });
@@ -38,7 +40,7 @@ export class ReportService {
 
     if (search) {
       query.andWhere(
-        "(report.id LIKE :search OR report.reviewId LIKE :search OR report.userId LIKE :search)",
+        '("report"."id"::text LIKE :search OR "report"."reviewId"::text LIKE :search OR "user"."username" LIKE :search)',
         { search: `%${search}%` },
       );
     }
