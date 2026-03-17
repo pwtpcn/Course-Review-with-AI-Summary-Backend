@@ -38,7 +38,7 @@ export class ReviewServices {
 
     if (search) {
       query.andWhere(
-        "(review.courseId::text LIKE :search OR review.content LIKE :search OR review.userId::text LIKE :search)",
+        '(review.courseId LIKE :search OR review.content LIKE :search OR "review"."userId"::text LIKE :search)',
         { search: `%${search}%` },
       );
     }
