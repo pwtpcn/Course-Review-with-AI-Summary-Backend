@@ -257,7 +257,15 @@ export const reviewController = new Elysia({
 
   .patch(
     "/hide/:id",
-    async ({ params: { id }, set }) => {
+    async ({ params: { id }, set, user }) => {
+      if (!user) {
+        set.status = 401;
+        return { error: "Unauthorized" };
+      }
+      if (user.role !== "admin") {
+        set.status = 403;
+        return { error: "Forbidden" };
+      }
       try {
         const review = await service.hideReview(id);
         set.status = 200;
@@ -275,6 +283,38 @@ export const reviewController = new Elysia({
       detail: {
         description: "Hide a review",
         summary: "Hide a review",
+      },
+    },
+  )
+
+  .patch(
+    "/unhide/:id",
+    async ({ params: { id }, set, user }) => {
+      if (!user) {
+        set.status = 401;
+        return { error: "Unauthorized" };
+      }
+      if (user.role !== "admin") {
+        set.status = 403;
+        return { error: "Forbidden" };
+      }
+      try {
+        const review = await service.unhideReview(id);
+        set.status = 200;
+        return { message: "Review unhidden successfully", review };
+      } catch (e: any) {
+        if (e.message === "Review not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
+        return { error: e.message };
+      }
+    },
+    {
+      detail: {
+        description: "Unhide a review",
+        summary: "Unhide a review",
       },
     },
   );

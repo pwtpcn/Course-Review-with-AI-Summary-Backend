@@ -141,6 +141,12 @@ export class ReviewServices {
     review.status = "hidden";
     return this.dataSource.manager.save(Review, review);
   }
+
+  async unhideReview(id: string) {
+    const review = await this.getReviewByIdOrThrow(id);
+    review.status = "active";
+    return this.dataSource.manager.save(Review, review);
+  }
 }
 
 export default ReviewServices;
