@@ -7,6 +7,7 @@ import { reviewController } from "./controller/review_controllers";
 import { jobController } from "./controller/job_controllers";
 import { reportController } from "./controller/report_controllers";
 import { aiController } from "./controller/ai_controllers";
+import { reactionController } from "./controller/reaction_controllers";
 import { swagger } from "@elysiajs/swagger";
 import { initQdrantCollections } from "./lib/qdrant";
 
@@ -22,6 +23,8 @@ const app = new Elysia()
   .use(jobController)
   .use(reportController)
   .use(aiController)
+  .use(reactionController)
+  
   .listen(3000);
 
 console.log(

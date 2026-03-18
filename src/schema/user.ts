@@ -2,6 +2,7 @@ import { Column, Entity, OneToMany } from "typeorm";
 import { Metadata } from "./common/metadata";
 import { Review } from "./review";
 import { Report } from "./report";
+import { ReviewReaction } from "./review_reaction";
 
 @Entity()
 export class User extends Metadata {
@@ -23,4 +24,7 @@ export class User extends Metadata {
 
   @OneToMany(() => Report, (report) => report.user)
   reports!: Report[];
+
+  @OneToMany(() => ReviewReaction, (reaction) => reaction.user)
+  reactions!: ReviewReaction[];
 }

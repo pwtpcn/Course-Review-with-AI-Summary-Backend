@@ -6,6 +6,7 @@ import type { User as UserType } from "./user";
 import { Course } from "./course";
 import type { Course as CourseType } from "./course";
 import { Report } from "./report";
+import { ReviewReaction } from "./review_reaction";
 
 @Entity()
 export class Review extends Metadata {
@@ -56,4 +57,7 @@ export class Review extends Metadata {
 
   @OneToMany(() => Report, (report) => report.review)
   reports!: Report[];
+
+  @OneToMany(() => ReviewReaction, (reaction) => reaction.review)
+  reactions!: ReviewReaction[];
 }
