@@ -30,7 +30,8 @@ export class ReviewServices {
   ) {
     const query = this.dataSource.manager.createQueryBuilder(Review, "review")
       .leftJoinAndSelect("review.course", "course")
-      .leftJoinAndSelect("review.reports", "reports");
+      .leftJoinAndSelect("review.reports", "reports")
+      .leftJoinAndSelect("review.reactions", "reactions");
 
     if (status) {
       query.andWhere("review.status = :status", { status });
@@ -57,7 +58,7 @@ export class ReviewServices {
   async getReviewById(id: string) {
     return this.dataSource.manager.findOne(Review, {
       where: { id },
-      relations: ["course", "reports"],
+      relations: ["course", "reports", "reactions"],
     });
   }
 
@@ -89,7 +90,7 @@ export class ReviewServices {
     return this.dataSource.manager.find(Review, {
       where,
       order,
-      relations: ["course", "reports"],
+      relations: ["course", "reports", "reactions"],
     });
   }
 
@@ -113,7 +114,7 @@ export class ReviewServices {
     return this.dataSource.manager.find(Review, {
       where,
       order,
-      relations: ["course", "reports"],
+      relations: ["course", "reports", "reactions"],
     });
   }
 
