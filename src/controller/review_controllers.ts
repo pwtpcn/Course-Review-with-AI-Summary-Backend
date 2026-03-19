@@ -29,11 +29,27 @@ export const reviewController = new Elysia({
     {
       body: t.Object({
         courseId: t.String(),
-        content: t.String(),
-        pros: t.String(),
-        cons: t.Optional(t.String()),
-        rating: t.Number(),
-        testPrepare: t.Optional(t.String()),
+        content: t.String({
+          maxLength: 350,
+          error: "Content must be at most 350 characters",
+        }),
+        pros: t.String({
+          maxLength: 350,
+          error: "Pros must be at most 350 characters",
+        }),
+        cons: t.Optional(t.String({
+          maxLength: 350,
+          error: "Cons must be at most 350 characters",
+        })),
+        rating: t.Number({
+          minimum: 1,
+          maximum: 5,
+          error: "Rating must be between 1 and 5",
+        }),
+        testPrepare: t.Optional(t.String({
+          maxLength: 350,
+          error: "Test prepare must be at most 350 characters",
+        })),
       }),
       detail: {
         description: "Create a new review",
@@ -207,11 +223,27 @@ export const reviewController = new Elysia({
         id: t.String(),
       }),
       body: t.Object({
-        content: t.Optional(t.String()),
-        pros: t.Optional(t.String()),
-        cons: t.Optional(t.String()),
-        rating: t.Optional(t.Number()),
-        testPrepare: t.Optional(t.String()),
+        content: t.Optional(t.String({
+          maxLength: 350,
+          error: "Content must be at most 350 characters",
+        })),
+        pros: t.Optional(t.String({
+          maxLength: 350,
+          error: "Pros must be at most 350 characters",
+        })),
+        cons: t.Optional(t.String({
+          maxLength: 350,
+          error: "Cons must be at most 350 characters",
+        })),
+        rating: t.Optional(t.Number({
+          minimum: 1,
+          maximum: 5,
+          error: "Rating must be between 1 and 5",
+        })),
+        testPrepare: t.Optional(t.String({
+          maxLength: 350,
+          error: "Test prepare must be at most 350 characters",
+        })),
       }),
       detail: {
         description: "Update a review",
