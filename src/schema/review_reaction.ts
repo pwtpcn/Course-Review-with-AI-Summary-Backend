@@ -19,9 +19,9 @@ export class ReviewReaction extends Metadata {
     @Column()
     userId!: string;
 
-    @ManyToOne(() => Review, (review) => review.reactions)
+    @ManyToOne(() => Review, (review) => review.reactions, { onDelete: "CASCADE" })
     review!: ReviewType;
 
-    @ManyToOne(() => User, (user) => user.reactions)
+    @ManyToOne(() => User, (user) => user.reactions, { onDelete: "CASCADE" })
     user!: UserType;
 }
