@@ -408,10 +408,11 @@ export class AiService {
     let contextWarning = "";
 
     // Too few reviews skip grouping, use all directly
-    if (allPoints.length < 3) {
+    const isLowReviewCount = allPoints.length < 3;
+
+    if (isLowReviewCount) {
       uniqueReviews = allPoints;
-      contextWarning =
-        "(เนื่องจากจำนวนรีวิวมีน้อยมาก ให้สรุปตามข้อมูลที่มีและระบุสั้นๆ ว่าข้อมูลยังน้อย)";
+      contextWarning = "(เนื่องจากจำนวนรีวิวมีน้อยมาก ให้สรุปตามข้อมูลที่มีอย่างระมัดระวัง)";
       console.log(`[Low Review Count] Only ${allPoints.length} review(s), skipping group strategy`);
     } else {
       // Use 3 group strategy (recent + positive + negative)
@@ -503,7 +504,7 @@ export class AiService {
       "content": "เนื้อหาสรุปแบบภาพรวม",
       "pros": ["จุดเด่นที่ 1", "จุดเด่นที่ 2"],
       "cons": ["จุดควรระวังที่ 1", "จุดควรระวังที่ 2"],
-      "testPrepare": ["วิธีการเตรียมตัวสอบที่ 1", "วิธีการเตรียมตัวสอบที่ 2"],
+      "testPrepare": ["วิธีการเตรียมตัวสอบที่ 1", "วิธีการเตรียมตัวสอบที่ 2"]
     }
 
     รีวิวที่ใช้สรุป:
@@ -514,6 +515,11 @@ export class AiService {
 
     const cleanSummary = summary.replace(/```json\n?|\n?```/g, "").trim();
     const result = JSON.parse(cleanSummary);
+
+    // Inject note field for low review count (guaranteed, not AI-generated)
+    if (isLowReviewCount) {
+      result.note = `ข้อมูลรีวิวยังมีน้อยมาก การสรุปนี้จึงอ้างอิงจากรีวิวเพียง ${allPoints.length} รายการเท่านั้น`;
+    }
 
     try {
       // Cache for 24 hours (86400 seconds)
