@@ -329,7 +329,6 @@ export class AiService {
         "aiSummary": "สายงาน Software Engineer เน้นทักษะการคิดวิเคราะห์ การแก้ปัญหา การออกแบบระบบ การเขียนโปรแกรม การทดสอบ และการทำงานร่วมกับผู้อื่น รายวิชาทั้ง 10 รายการนี้ครอบคลุมทักษะที่จำเป็นอย่างครอบคลุม ...(ส่วนนี้ให้**สรุปสั้นๆ**ว่าวิชาเหล่านี้ตอบโจทย์อย่างไร)",
       }
 
-      โดย ตัวเลขใน () ลำดับของวิชาในรายการ รายวิชาที่ระบบแนะนำ
       `;
 
     const aiResponseText = await this.generateText(prompt);
@@ -384,20 +383,7 @@ export class AiService {
       console.error("Redis get error", err);
     }
 
-    // Get reviews from Qdrant
-    const numberOfReview = 24;
-
-    // Latest Review
-    const recentSearchResult = await client.scroll(QDRANT_COLLECTIONS.REVIEWS, {
-      filter: {
-        must: [{ key: "courseId", match: { value: courseId } }],
-      },
-      limit: 8,
-      with_payload: true,
-    });
-    const recentPoints = recentSearchResult.points;
-
-    // Get Vector for calculate Mean Vector
+    // Get all reviews with vectors for grouping
     const allSearchResult = await client.scroll(QDRANT_COLLECTIONS.REVIEWS, {
       filter: {
         must: [{ key: "courseId", match: { value: courseId } }],
@@ -415,60 +401,81 @@ export class AiService {
         pros: [],
         cons: [],
         testPrepare: [],
-        rating: 0,
       };
     }
 
-    // Separate by Sentiment (Rating)
-    const positivePoints = allPoints.filter(
-      (p) => (p.payload as any).rating >= 4,
-    );
-    const negativePoints = allPoints.filter(
-      (p) => (p.payload as any).rating <= 3,
-    );
+    let uniqueReviews: any[];
+    let contextWarning = "";
 
-    const selectedReviews: any[] = [...recentPoints];
+    // Too few reviews skip grouping, use all directly
+    if (allPoints.length < 3) {
+      uniqueReviews = allPoints;
+      contextWarning =
+        "(เนื่องจากจำนวนรีวิวมีน้อยมาก ให้สรุปตามข้อมูลที่มีและระบุสั้นๆ ว่าข้อมูลยังน้อย)";
+      console.log(`[Low Review Count] Only ${allPoints.length} review(s), skipping group strategy`);
+    } else {
+      // Use 3 group strategy (recent + positive + negative)
+      const numberOfReview = 24;
 
-    // Positive Review
-    if (positivePoints.length > 0) {
-      const positiveVectors = positivePoints.map((p) => p.vector as number[]);
-      const positiveMean = calculateMeanVector(positiveVectors);
-      const posSearchResult = await client.search(QDRANT_COLLECTIONS.REVIEWS, {
-        vector: positiveMean,
+      // Group 1: Latest 8 reviews
+      const recentSearchResult = await client.scroll(QDRANT_COLLECTIONS.REVIEWS, {
         filter: {
-          must: [
-            { key: "courseId", match: { value: courseId } },
-            { key: "rating", range: { gte: 4 } },
-          ],
+          must: [{ key: "courseId", match: { value: courseId } }],
         },
         limit: 8,
         with_payload: true,
       });
-      selectedReviews.push(...posSearchResult);
-    }
+      const selectedReviews: any[] = [...recentSearchResult.points];
 
-    // Negative Review
-    if (negativePoints.length > 0) {
-      const negativeVectors = negativePoints.map((p) => p.vector as number[]);
-      const negativeMean = calculateMeanVector(negativeVectors);
-      const negSearchResult = await client.search(QDRANT_COLLECTIONS.REVIEWS, {
-        vector: negativeMean,
-        filter: {
-          must: [
-            { key: "courseId", match: { value: courseId } },
-            { key: "rating", range: { lte: 3 } },
-          ],
-        },
-        limit: 8,
-        with_payload: true,
-      });
-      selectedReviews.push(...negSearchResult);
-    }
+      // rating 0-3 = easy/positive, rating 4-5 = hard/negative
+      const positivePoints = allPoints.filter(
+        (p) => (p.payload as any).rating <= 3,
+      );
+      const negativePoints = allPoints.filter(
+        (p) => (p.payload as any).rating >= 4,
+      );
 
-    // Deduplicate
-    const uniqueReviews = Array.from(
-      new Map(selectedReviews.map((r) => [r.id, r])).values(),
-    ).slice(0, numberOfReview);
+      // Group 2: 8 positive reviews (rating 0–3)
+      if (positivePoints.length > 0) {
+        const positiveVectors = positivePoints.map((p) => p.vector as number[]);
+        const positiveMean = calculateMeanVector(positiveVectors);
+        const posSearchResult = await client.search(QDRANT_COLLECTIONS.REVIEWS, {
+          vector: positiveMean,
+          filter: {
+            must: [
+              { key: "courseId", match: { value: courseId } },
+              { key: "rating", range: { lte: 3 } },
+            ],
+          },
+          limit: 8,
+          with_payload: true,
+        });
+        selectedReviews.push(...posSearchResult);
+      }
+
+      // Group 3: 8 negative reviews (rating 4–5)
+      if (negativePoints.length > 0) {
+        const negativeVectors = negativePoints.map((p) => p.vector as number[]);
+        const negativeMean = calculateMeanVector(negativeVectors);
+        const negSearchResult = await client.search(QDRANT_COLLECTIONS.REVIEWS, {
+          vector: negativeMean,
+          filter: {
+            must: [
+              { key: "courseId", match: { value: courseId } },
+              { key: "rating", range: { gte: 4 } },
+            ],
+          },
+          limit: 8,
+          with_payload: true,
+        });
+        selectedReviews.push(...negSearchResult);
+      }
+
+      // Deduplicate
+      uniqueReviews = Array.from(
+        new Map(selectedReviews.map((r) => [r.id, r])).values(),
+      ).slice(0, numberOfReview);
+    }
 
     const reviewContext = uniqueReviews
       .map(
@@ -479,12 +486,6 @@ export class AiService {
     const course = await this.courseRepo.findOne({
       where: { id: courseId },
     });
-
-    // รีวิวน้อย กำกับ AI สรุปแบบถ่อมตัว
-    const contextWarning =
-      uniqueReviews.length <= 3
-        ? "(เนื่องจากจำนวนรีวิวมีน้อยมาก ให้สรุปตามข้อมูลที่มีและอาจระบุสั้นๆ ว่าข้อมูลยังน้อย)"
-        : "";
 
     const prompt = `
     คุณคือผู้เชี่ยวชาญด้านการวิเคราะห์ข้อมูลทางการศึกษาและ AI Assistant สำหรับนิสิตมหาวิทยาลัย
