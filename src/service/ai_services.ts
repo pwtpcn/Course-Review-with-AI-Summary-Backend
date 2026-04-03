@@ -388,7 +388,6 @@ export class AiService {
       filter: {
         must: [{ key: "courseId", match: { value: courseId } }],
       },
-      limit: 100,
       with_payload: true,
       with_vector: true,
     });
