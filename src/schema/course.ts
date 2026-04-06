@@ -1,29 +1,40 @@
-import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryColumn } from "typeorm";
+import { Column, Entity, OneToMany, PrimaryColumn } from "typeorm";
 import { MetadataWithoutId } from "./common/metadata_without_id";
-import { CareerPath } from "./career_path";
 import { Review } from "./review";
 
 @Entity()
 export class Course extends MetadataWithoutId {
-  @PrimaryColumn()
-  courseId!: string;
+  @PrimaryColumn({ length: 10 })
+  id!: string;
 
-  @Column()
+  @Column({ length: 255 })
   nameTh!: string;
 
-  @Column()
+  @Column({ length: 255 })
   nameEn!: string;
 
-  @Column()
+  @Column({ type: "text" })
   description!: string;
 
-  @Column()
+  @Column({ type: "smallint" })
   credits!: number;
 
-  @JoinTable({ name: "course_career_paths" })
-  @ManyToMany(() => CareerPath, (careerPath) => careerPath.courses)
-  careerPaths!: CareerPath[];
+  @Column({ type: "smallint" })
+  year!: number;
 
-  @OneToMany(() => Review, (review) => review.courseId)
+  @Column({
+    type: "enum",
+    enum: ["Core", "Elective"],
+    default: "Core",
+  })
+  category!: "Core" | "Elective";
+
+  @Column({ type: "float", default: 0 })
+  rating!: number;
+
+  @Column({ type: "int", default: 0 })
+  reviewCount!: number;
+
+  @OneToMany(() => Review, (review) => review.course)
   reviews!: Review[];
 }

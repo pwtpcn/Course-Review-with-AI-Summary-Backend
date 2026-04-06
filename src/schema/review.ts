@@ -1,32 +1,63 @@
-import { Column, Entity } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 import { Metadata } from "./common/metadata";
+
+import { User } from "./user";
+import type { User as UserType } from "./user";
+import { Course } from "./course";
+import type { Course as CourseType } from "./course";
+import { Report } from "./report";
+import { ReviewReaction } from "./review_reaction";
 
 @Entity()
 export class Review extends Metadata {
   @Column()
   userId!: string;
 
+  @ManyToOne(() => User, (user) => user.reviews, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "userId" })
+  user!: UserType;
+
   @Column()
   courseId!: string;
 
-  @Column()
-  contentDetail!: string;
+  @ManyToOne(() => Course, (course) => course.reviews, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "courseId" })
+  course!: CourseType;
 
-  @Column()
-  difficulty!: string;
+  @Column({ type: "text" })
+  content!: string;
 
-  @Column()
-  teachingStyle!: string;
+  @Column({ type: "text" })
+  pros!: string;
 
-  @Column({ nullable: true })
-  disadvantage?: string;
+  @Column({ nullable: true, default: "-", type: "text" })
+  cons?: string;
 
-  @Column()
-  rating1!: number;
+  @Column({ type: "smallint" })
+  rating!: number;
 
-  @Column()
-  rating2!: number;
+  @Column({ nullable: true, default: "-", type: "text" })
+  testPrepare?: string;
 
-  @Column()
-  rating3!: number;
+  @Column({ default: 0, type: "int" })
+  like!: number;
+
+  @Column({ default: 0, type: "int" })
+  dislike!: number;
+
+  @Column({ default: false })
+  isEdited!: boolean;
+
+  @Column({
+    type: "enum",
+    enum: ["active", "hidden"],
+    default: "active",
+  })
+  status!: "active" | "hidden";
+
+  @OneToMany(() => Report, (report) => report.review)
+  reports!: Report[];
+
+  @OneToMany(() => ReviewReaction, (reaction) => reaction.review)
+  reactions!: ReviewReaction[];
 }

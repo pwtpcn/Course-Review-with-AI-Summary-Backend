@@ -1,28 +1,156 @@
-import Elysia from "elysia";
+import Elysia, { t } from "elysia";
 import UserServices from "../service/user_services";
-import { t } from "elysia";
-import { User } from "../schema/user";
-import { hashPassword } from "../util/hash_password";
-import { UserLoginResponse } from "../dto/user_login_response";
+import { authMiddleware } from "../middleware/auth";
+
 const service = new UserServices();
 
 export const userController = new Elysia({
   prefix: "/user",
   detail: { tags: ["User"] },
 })
-  .post(
-    "/register",
-    async ({ body: { username, email, password } }) => {
-      const user = new User();
-      user.username = username;
-      user.email = email;
+  .use(authMiddleware)
 
-      const { hashedPassword, salt } = await hashPassword(password);
+  .get(
+    "/me",
+    ({ user, set }) => {
+      set.status = 200;
+      return { message: "User synced", user };
+    },
+    {
+      detail: {
+        description: "Get current user profile (syncs with Supabase)",
+        summary: "Get current user profile",
+      },
+    },
+  )
 
-      user.hashedPassword = hashedPassword;
-      user.salt = salt;
+  .get(
+    "/getall",
+    async ({ query: { sortBy }, set }) => {
+      try {
+        const response = await service.getAllUsers(sortBy);
+        set.status = 200;
+        return { message: "Users fetched successfully", users: response };
+      } catch (e: any) {
+        set.status = 500;
+        return { error: e.message };
+      }
+    },
+    {
+      query: t.Object({
+        sortBy: t.Optional(t.Union([t.Literal("newest"), t.Literal("oldest")])),
+      }),
+      detail: {
+        description: "Get all users",
+        summary: "Get all users",
+      },
+    },
+  )
 
-      return { user: await service.registerUser(user) };
+  .get(
+    "/getbyid/:id",
+    async ({ params: { id }, set }) => {
+      try {
+        const response = await service.getUserByIdOrThrow(id);
+        set.status = 200;
+        return { message: "User fetch successfully", user: response };
+      } catch (e: any) {
+        if (e.message === "User not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
+        return { error: e.message };
+      }
+    },
+    {
+      detail: {
+        description: "Get a user by id",
+        summary: "Get a user by id",
+      },
+    },
+  )
+
+  .get(
+    "/getbyemail/:email",
+    async ({ params: { email }, set }) => {
+      try {
+        const response = await service.getUserByEmailOrThrow(email);
+        set.status = 200;
+        return { message: "User fetch successfully", user: response };
+      } catch (e: any) {
+        if (e.message === "User not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
+        return { error: e.message };
+      }
+    },
+    {
+      detail: {
+        description: "Get a user by email",
+        summary: "Get a user by email",
+      },
+    },
+  )
+
+  .get(
+    "/getbyusername/:username",
+    async ({ params: { username }, set }) => {
+      try {
+        const response = await service.getUserByUsernameOrThrow(username);
+        set.status = 200;
+        return { message: "User fetch successfully", user: response };
+      } catch (e: any) {
+        if (e.message === "User not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
+        return { error: e.message };
+      }
+    },
+    {
+      detail: {
+        description: "Get a user by username",
+        summary: "Get a user by username",
+      },
+    },
+  )
+
+  .put(
+    "/changeUsername/:id",
+    async ({ params: { id }, body: { username }, user, set }) => {
+      // Authorization Check
+      if (user?.id !== id) {
+        set.status = 403;
+        return { error: "Forbidden" };
+      }
+
+      try {
+        const { oldUsername, newUsername } = await service.changeUsername(
+          id,
+          username,
+        );
+        set.status = 200;
+        return {
+          message: "Username changed successfully",
+          oldUsername,
+          newUsername,
+        };
+      } catch (e: any) {
+        if (e.message === "Username already taken") {
+          set.status = 409;
+          return { error: e.message };
+        }
+        if (e.message === "User not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
+        return { error: e.message };
+      }
     },
     {
       body: t.Object({
@@ -30,60 +158,40 @@ export const userController = new Elysia({
           minLength: 3,
           maxLength: 20,
         }),
-        email: t.String({
-          format: "email",
-        }),
-        password: t.String({
-          format: "regex",
-          regex:
-            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-          message:
-            "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
-          minLength: 8,
-          maxLength: 15,
-        }),
       }),
       detail: {
-        description: "Register a new user",
-        summary: "Register a new user",
+        description: "Change username of a user",
+        summary: "Change username of a user",
       },
-    }
+    },
   )
 
-  .post(
-    "/login",
-    async ({ body: { email, password } }) => {
-      const user = await service.getUserByEmail(email);
-      if (!user) {
-        return { error: "User not found" };
+  .delete(
+    "/delete/:id",
+    async ({ params: { id }, user, set }) => {
+      // Authorization Check
+      if (user?.id !== id && user?.role !== "admin") {
+        set.status = 403;
+        return { error: "Forbidden" };
       }
-      const { hashedPassword, salt } = user;
-      const passwordWithSalt = password + salt;
-      const isMatch = await Bun.password.verify(
-        passwordWithSalt,
-        hashedPassword
-      );
-      if (!isMatch) {
-        return { error: "Invalid password" };
-      }
-      const userLoginResponse = new UserLoginResponse(
-        user.email,
-        user.username,
-        user.role
-      );
 
-      return { userLoginResponse };
+      try {
+        const result = await service.deleteUser(id);
+        set.status = 200;
+        return { message: "User deleted successfully", user: result };
+      } catch (e: any) {
+        if (e.message === "User not found") {
+          set.status = 404;
+          return { error: e.message };
+        }
+        set.status = 500;
+        return { error: e.message };
+      }
     },
     {
-      body: t.Object({
-        email: t.String({
-          format: "email",
-        }),
-        password: t.String({}),
-      }),
       detail: {
-        description: "Login a user",
-        summary: "Login a user",
+        description: "Delete a user",
+        summary: "Delete a user",
       },
-    }
+    },
   );

@@ -1,12 +1,32 @@
 import { Elysia } from "elysia";
-import { dataSource } from "./data-source";
+import { cors } from "@elysiajs/cors";
+import { dataSource } from "./lib/data-source";
 import { userController } from "./controller/user_controllers";
-import {swagger} from "@elysiajs/swagger";
+import { courseController } from "./controller/course_controllers";
+import { reviewController } from "./controller/review_controllers";
+import { jobController } from "./controller/job_controllers";
+import { reportController } from "./controller/report_controllers";
+import { aiController } from "./controller/ai_controllers";
+import { reactionController } from "./controller/reaction_controllers";
+import { swagger } from "@elysiajs/swagger";
+import { initQdrantCollections } from "./lib/qdrant";
 
 await dataSource.initialize();
+await initQdrantCollections();
 
-const app = new Elysia().use(swagger()).use(userController).listen(3000);
+const app = new Elysia()
+  .use(cors())
+  .use(swagger())
+  .use(userController)
+  .use(courseController)
+  .use(reviewController)
+  .use(jobController)
+  .use(reportController)
+  .use(aiController)
+  .use(reactionController)
+  
+  .listen(3000);
 
 console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
+  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
 );
